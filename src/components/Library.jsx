@@ -133,7 +133,9 @@ export default function Library({ role, onOpenChapter, onResume, onViewReport, l
 
       {role === "student" && <h3 className="shelf-section-title"><IconBook size={17} /> My courses <span className="shelf-sub">from your teacher</span></h3>}
       <section className="shelf">
-        {(role === "teacher" ? chapters || [] : courses).map(renderBook)}
+        {/* Class material = teacher-authored courses only; students' personal
+            internet-built topics never appear on the teacher's shelf */}
+        {courses.map(renderBook)}
         {role === "student" && courses.length === 0 && chapters !== null && (
           <p className="home-hint">No courses yet — your teacher adds them, and they appear here.</p>
         )}
