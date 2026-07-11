@@ -2158,8 +2158,8 @@ body {
   color: color-mix(in srgb, var(--ink) 62%, transparent);
 }
 .ledger-label svg { color: var(--ballpoint); }
-.ledger-stat.alert .ledger-num { color: var(--red-pencil); }
-.ledger-stat.alert .ledger-label svg { color: var(--red-pencil); }
+.ledger-stat.alert .ledger-num { color: var(--redpencil); }
+.ledger-stat.alert .ledger-label svg { color: var(--redpencil); }
 
 /* calmer cards: hairline instead of ink-heavy border + shadow */
 .insights .viz-card {
@@ -2231,7 +2231,7 @@ body {
 .gb-pct { font-variant-numeric: tabular-nums; font-size: 0.82rem; width: 38px; text-align: right; }
 .gb-col-skill { font-variant-numeric: tabular-nums; font-size: 0.85rem; text-align: center; }
 .gb-col-streak { display: inline-flex; align-items: center; gap: 4px; font-size: 0.85rem; }
-.gb-flame { color: var(--red-pencil); }
+.gb-flame { color: var(--redpencil); }
 .gb-dim { color: color-mix(in srgb, var(--ink) 40%, transparent); }
 .gb-chevron { transition: transform 0.2s; color: color-mix(in srgb, var(--ink) 55%, transparent); }
 .gb-row-wrap.open .gb-chevron { transform: rotate(180deg); }
@@ -2246,7 +2246,7 @@ body {
 .gb-dots { display: inline-flex; gap: 4px; }
 .gb-dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid; }
 .gb-dot.ok { border-color: var(--ballpoint); background: var(--ballpoint); }
-.gb-dot.bad { border-color: var(--red-pencil); background: transparent; }
+.gb-dot.bad { border-color: var(--redpencil); background: transparent; }
 .gb-report { font-size: 0.8rem; }
 .gb-quote {
   font-family: "Caveat", cursive; font-size: 1.12rem; color: var(--ballpoint);
@@ -2254,7 +2254,7 @@ body {
 }
 .gb-quote svg { color: var(--highlighter); vertical-align: -2px; }
 .gb-meta-line { margin: 4px 0 0; font-size: 0.8rem; color: color-mix(in srgb, var(--ink) 60%, transparent); }
-.gb-flag { color: var(--red-pencil); }
+.gb-flag { color: var(--redpencil); }
 
 @media (max-width: 760px) {
   .gb-head, .gb-row { grid-template-columns: 2fr 1.6fr 0.9fr 30px; }
@@ -2353,3 +2353,162 @@ body {
 .deck-answer-why { font-size: 0.98rem; line-height: 1.55; margin: 0; }
 .drawpad-tools button { display: inline-flex; align-items: center; gap: 6px; }
 .write-btn { display: inline-flex; align-items: center; gap: 6px; }
+
+/* ── landing v2: problem line, agent roster, feature syllabus ───────────── */
+.landing-problem {
+  max-width: 830px;
+  margin: 8px auto 34px;
+  padding: 0 8px;
+}
+.problem-line {
+  font-size: 1.14rem;
+  line-height: 1.75;
+  text-align: center;
+  color: var(--ink);
+}
+.problem-line em { color: var(--ballpoint); font-style: normal; font-weight: 600; }
+.problem-line strong {
+  background: linear-gradient(transparent 45%, color-mix(in srgb, var(--highlighter) 80%, transparent) 45% 92%, transparent 92%);
+  padding: 0 3px;
+}
+.problem-strike {
+  position: relative;
+  white-space: nowrap;
+}
+.problem-strike::after {
+  content: "";
+  position: absolute;
+  left: -2px; right: -2px; top: 54%;
+  height: 3px;
+  background: var(--redpencil);
+  border-radius: 3px;
+  transform: rotate(-1.1deg);
+}
+
+.landing-h2 {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 1.7rem;
+  text-align: center;
+  margin: 46px 0 4px;
+}
+.landing-h2-sub {
+  text-align: center;
+  color: var(--ink-soft);
+  margin-bottom: 22px;
+  font-size: 0.98rem;
+}
+
+.agent-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  max-width: 980px;
+  margin: 0 auto 16px;
+}
+@media (max-width: 860px) { .agent-grid { grid-template-columns: repeat(2, 1fr); } }
+.agent-card {
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  background: var(--paper);
+  box-shadow: 3px 3px 0 rgba(34, 37, 42, 0.12);
+  padding: 18px 16px 14px;
+  text-align: center;
+}
+.agent-avatar {
+  width: 46px; height: 46px;
+  margin: 0 auto 10px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ballpoint);
+  color: var(--ballpoint);
+  display: flex; align-items: center; justify-content: center;
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 700;
+}
+.agent-card h4 { font-family: "Bricolage Grotesque", sans-serif; font-size: 1.02rem; margin-bottom: 2px; }
+.agent-tag { font-family: "Caveat", cursive; font-size: 1.05rem; color: var(--ballpoint); margin-bottom: 8px; }
+.agent-note { font-size: 0.8rem; color: var(--ink-soft); line-height: 1.5; }
+
+.agent-wide-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  max-width: 980px;
+  margin: 0 auto;
+}
+@media (max-width: 860px) { .agent-wide-row { grid-template-columns: 1fr; } }
+.agent-wide {
+  border: 1px solid color-mix(in srgb, var(--ink) 22%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, #fff 45%, var(--paper));
+  padding: 16px 18px;
+}
+.agent-wide h4 {
+  display: flex; align-items: center; gap: 8px;
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 1rem;
+  margin-bottom: 6px;
+}
+.agent-wide h4 svg { color: var(--ballpoint); }
+.agent-wide p { font-size: 0.88rem; color: var(--ink-soft); line-height: 1.6; }
+
+.agent-memory-note {
+  max-width: 720px;
+  margin: 18px auto 0;
+  text-align: center;
+  font-family: "Caveat", cursive;
+  font-size: 1.28rem;
+  color: var(--ballpoint);
+  transform: rotate(-0.5deg);
+}
+
+.landing-syllabus {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  max-width: 980px;
+  margin: 44px auto 0;
+}
+@media (max-width: 860px) { .landing-syllabus { grid-template-columns: 1fr; } }
+.syllabus-col {
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  background: var(--paper);
+  box-shadow: 4px 4px 0 rgba(34, 37, 42, 0.12);
+  padding: 20px 22px;
+}
+.syllabus-title {
+  display: flex; align-items: center; gap: 8px;
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 1.15rem;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1.5px dashed color-mix(in srgb, var(--ink) 30%, transparent);
+}
+.syllabus-title svg { color: var(--ballpoint); }
+.syllabus-col ul { list-style: none; padding: 0; margin: 0; }
+.syllabus-col li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  border-bottom: 1px dashed color-mix(in srgb, var(--ink) 14%, transparent);
+}
+.syllabus-col li:last-child { border-bottom: none; }
+.syllabus-icon { color: var(--ballpoint); flex-shrink: 0; margin-top: 3px; }
+
+.landing-cta-band {
+  text-align: center;
+  margin: 48px auto 8px;
+  padding: 30px 20px;
+  max-width: 980px;
+  border-top: 1.5px solid var(--ink);
+  border-bottom: 1.5px solid var(--ink);
+}
+.cta-band-line {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 1.45rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
