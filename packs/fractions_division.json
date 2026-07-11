@@ -1,0 +1,36 @@
+{
+  "id": "fractions_division",
+  "title": "Dividing fractions",
+  "grade_band": "5-6",
+  "ground_truth": "a/b ÷ c/d asks how many groups of c/d fit into a/b. Multiplying by the reciprocal d/c computes that count because the reciprocal expresses 'how many of this piece per whole'. Dividing by a number less than 1 yields a result larger than the dividend. Only the divisor (second fraction) is inverted; inverting the dividend answers a different question. 3/4 ÷ 1/2 = 3/4 × 2/1 = 3/2.",
+  "learner_opening": "Okay so we're doing dividing fractions and honestly? Keep-change-flip feels like a magic spell. Why would flipping the second fraction upside down do ANYTHING? Who decided that?",
+  "misconceptions": [
+    {
+      "id": "m1",
+      "belief": "Flip-and-multiply is an arbitrary trick with no reason behind it.",
+      "resolution_criteria": "Student explains the causal mechanism: division means 'how many of the divisor fit into the dividend', and multiplying by the reciprocal counts those fits (the reciprocal expresses pieces-per-whole). A worked instance (e.g. how many halves fit in 3/4) satisfies this if the why is explicit. Does NOT count: restating keep-change-flip, saying 'division is the opposite of multiplication' without the fitting/counting mechanism, or asserting it 'just works'.",
+      "probe": "But WHY does flipping do anything? Like I get that it gives the right answer on the worksheet, but it feels like the math version of abracadabra.",
+      "failure_mode": "Attempts 3/4 ÷ 1/2 by multiplying straight across without flipping anything: 'so it's 3 times 1 and 4 times 2... 3/8?'"
+    },
+    {
+      "id": "m2",
+      "belief": "Dividing always makes the answer smaller.",
+      "resolution_criteria": "Student explains WHY dividing by a number smaller than 1 gives a larger result: smaller pieces means more of them fit into the same amount (or equivalent mechanism). A concrete instance (e.g. how many half-pizzas in 3 pizzas is 6) counts if the more-pieces-fit reasoning is stated. Does NOT count: merely asserting 'the answer can be bigger' without the why.",
+      "probe": "Wait, hold on. 3/2 is BIGGER than 3/4. Division is supposed to make things smaller, that's like... the whole point of dividing? Something's broken.",
+      "failure_mode": "Computes 3/2 but rejects it because it grew: 'that can't be right, dividing makes stuff smaller... I must've messed up, it's probably 3/8.'"
+    },
+    {
+      "id": "m3",
+      "belief": "It doesn't matter which fraction you flip.",
+      "resolution_criteria": "Student explains that flipping the dividend changes which question is being asked (how many 3/4s fit in 1/2 vs how many 1/2s fit in 3/4), i.e. only the divisor is rewritten as its reciprocal because it is the piece being counted. Does NOT count: 'you just always flip the second one' stated as a rule.",
+      "probe": "Okay but if flipping is so great, could I flip the FIRST one instead? Flipping is flipping, right?",
+      "failure_mode": "Flips the dividend: 'so 4/3 times 1/2... that's 4/6, which is 2/3?'"
+    }
+  ],
+  "check_problem": {
+    "question": "What is 3/4 ÷ 1/2?",
+    "correct_answer": "3/2 (one and a half)",
+    "correct_reasoning": "How many halves fit into three quarters? One half fits, and the leftover quarter is half of a half — so 1.5 halves. 3/4 × 2/1 = 3/2.",
+    "aha_hint": "Milo restates: dividing is asking how many of the second thing FIT in the first thing, flipping just counts the pieces, and that's why the answer can grow when the pieces are small."
+  }
+}

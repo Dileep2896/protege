@@ -1,0 +1,78 @@
+{
+  "_note": "Real learners from the EverMind data pack (packs/data_pack/*.json — full transcripts there, loaded into EverOS via scripts/load_learner.mjs). DEMO LEARNER: maya_chen — 7th grade math + a week-2 pizza-fractions session, so Milo's session-5 opener referencing 'the pizza thing' is a genuine callback. Her seeded_sessions below are the OFFLINE FALLBACK for src/lib/memory.js, summarized from her actual transcripts; they must stay aligned with the real history in EverOS.",
+  "demo_learner_id": "maya_chen",
+  "learners": [
+    {
+      "id": "maya_chen",
+      "name": "Maya Chen",
+      "age": 13,
+      "grade": "7th grade math",
+      "notes": "Freezes on math, repeats mistakes when anxious. Shutdown signal: one-word answers / 'can we stop'. Asks 'why' questions only once she feels safe. Number line became her tool for negatives; pizza framing works for fractions. Teaching Milo flips the dynamic: she's the expert, not the one being tested.",
+      "note_for_builders": "Cross-session hooks: (1) sign error -3-4=-1 recurs W1/W3/W5; (2) anxiety -> one-word answers / 'can we stop'; (3) 'why' questions appear once safe; (4) improper-fraction numerator/denominator flip in W2; (5) can't turn a sentence into an equation in W4.",
+      "seeded_sessions": [
+        {
+          "session": 1,
+          "session_id": "maya_w1_intro_negatives",
+          "concept": "Negative numbers (intro)",
+          "summary": "Warm-ups fine (5+3, 12-5), then -3-4 answered as -1 (sign error). Tutor started drawing the number line; Maya hit her anxiety wall and asked 'can we stop'. Session ended early, gently.",
+          "recurring": "Sign error -3-4=-1; shutdown signal is one-word answers then 'can we stop'."
+        },
+        {
+          "session": 2,
+          "session_id": "maya_w2_fractions",
+          "concept": "Fractions (pizza framing)",
+          "summary": "Pizza made fractions click: got 2/4 = 1/2 instantly ('pizza makes it easy'). Writing 'one and a half pizzas' as a fraction exposed the numerator/denominator flip (said 2/3, corrected to 3/2). Landed on 'top is how many I have, bottom is the size of each slice'.",
+          "recurring": "Improper-fraction flip; food/pizza framing is her strongest hook."
+        },
+        {
+          "session": 3,
+          "session_id": "maya_w3_negatives_again",
+          "concept": "Negative numbers (revisit)",
+          "summary": "Same -3-4=-1 error, but the number line fixed it ('ohhh so -7'). First 'why' question ever ('why does minus mean go left') — sign she felt safe. Self-checked -5-2=-7. 3 of 5 right, big jump.",
+          "recurring": "Number line works; 'why' questions = safety signal."
+        },
+        {
+          "session": 4,
+          "session_id": "maya_w4_word_problems",
+          "concept": "Word problems to equations",
+          "summary": "Solved the sticker problem in her head instantly (15) but couldn't write x-6=9 — 'i can do the math in my head but the equation is confusing. im bad at this.' Tutor reframed: solving is done, symbols are a separate new skill.",
+          "recurring": "Mental math strong; words-to-symbols is the gap; negative self-talk under frustration."
+        },
+        {
+          "session": 5,
+          "session_id": "maya_w5_negatives_review",
+          "concept": "Negative numbers (review)",
+          "summary": "Started the old -1 answer, then caught HERSELF: 'the number line. start at -3 go left 4. -7.' Nailed -8-5=-13 with reasoning out loud. Best mood yet — 'maybe im a tiny bit a math person'.",
+          "recurring": "Self-correction arrived; number line internalized; confidence building."
+        }
+      ]
+    },
+    {
+      "id": "daniel_okafor",
+      "name": "Daniel Okafor",
+      "age": 34,
+      "grade": "Adult reskiller — English + workplace skills",
+      "notes": "Short late-night sessions. Job-anchored examples land; abstract explanations lose him. Recurring verb-tense error (present perfect for finished past) and article drops. W4 attendance gap — resume mid-thread, don't start over.",
+      "note_for_builders": "Hooks: tense error recurs W1/W2/W4; articles NOT consolidated (W1, W4); Excel session shows job-anchored learning; W4 gap tests quick re-entry.",
+      "seeded_sessions": []
+    },
+    {
+      "id": "sofia_reyes",
+      "name": "Sofia Reyes",
+      "age": 16,
+      "grade": "10th grade English (writing)",
+      "notes": "Growth-over-time assessment case: Essay 1 (plot summary, no thesis) to Essay 4 (strong thesis, balanced analysis). Reliably acts on specific feedback. The trajectory, not any single essay, tells the story.",
+      "note_for_builders": "Hooks: essays 1-4 across 6 weeks; Essay 4's leap is a growth-vs-authenticity signal — memory-aware assessment narrates the earned arc instead of flagging it.",
+      "seeded_sessions": []
+    },
+    {
+      "id": "leo_carter",
+      "name": "Leo Carter",
+      "age": 10,
+      "grade": "5th grade (reading, IEP)",
+      "notes": "Dyslexia profile with IEP. Persistent bottleneck: decoding 3+ syllable words. Thrives 1:1, anxious reading aloud to peers. Space and animal texts engage him. Fluency 60 wpm to ~65 wpm across weeks.",
+      "note_for_builders": "Hooks: sessions include staff LOGGING notes; W5 absence; W6 re-assessment due for parent update + IEP progress note drawing on the whole history.",
+      "seeded_sessions": []
+    }
+  ]
+}
