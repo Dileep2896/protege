@@ -48,6 +48,9 @@ export function addTopic(chapter_id, topic) {
 export function extendCourse(chapter_id, text) {
   return request("/fn/learn", { method: "POST", body: JSON.stringify({ op: "extend", chapter_id, text }) });
 }
+export function askCoach(digest) {
+  return request("/fn/learn", { method: "POST", body: JSON.stringify({ op: "coach", digest }) });
+}
 export function applicationsFor(topic_id) {
   return request("/fn/learn", { method: "POST", body: JSON.stringify({ op: "applications", topic_id }) });
 }
@@ -129,7 +132,7 @@ export function deleteSession(id) {
 // Teacher dashboard: recent sessions, newest first.
 export async function listSessions(limit = 25) {
   const rows = await request(
-    `/sessions?select=id,learner_id,pack_id,pack_title,milo_level,state,report,created_at,updated_at&order=updated_at.desc&limit=${limit}`,
+    `/sessions?select=id,learner_id,pack_id,pack_title,milo_level,state,evidence,messages,report,created_at,updated_at&order=updated_at.desc&limit=${limit}`,
     { method: "GET" }
   );
   return Array.isArray(rows) ? rows : [];

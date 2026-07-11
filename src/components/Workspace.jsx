@@ -12,13 +12,14 @@ import {
 } from "../lib/backend.js";
 import learnersSeed from "../../packs/learners.json";
 import personas from "../../packs/personas.json";
+import { IconBook, IconMap, IconCap, IconFolder, IconPlus, IconCalendar, IconPin, IconCards, IconFilm, IconVideo } from "./Icons.jsx";
 
 const NAV = [
-  { id: "learn", icon: "📚", label: "Learn" },
-  { id: "path", icon: "🗺", label: "Path" },
-  { id: "teach", icon: "🎓", label: "Teach" },
-  { id: "sessions", icon: "🗂", label: "Sessions & reports" },
-  { id: "add", icon: "➕", label: "Grow course" }
+  { id: "learn", Icon: IconBook, label: "Learn" },
+  { id: "path", Icon: IconMap, label: "Path" },
+  { id: "teach", Icon: IconCap, label: "Teach" },
+  { id: "sessions", Icon: IconFolder, label: "Sessions & reports" },
+  { id: "add", Icon: IconPlus, label: "Grow course" }
 ];
 
 // Chrome won't reliably play multi-MB data-URI videos — hand it a Blob URL instead.
@@ -79,7 +80,7 @@ function ReelMain({ topic, index, onTeach, teachBusy, role }) {
         <div className="reel-placeholder" style={topic.image ? { backgroundImage: `url(${topic.image})` } : {}}>
           {checked && (
             <button className="reel-gen" onClick={generate} disabled={genState === "generating"}>
-              {genState === "generating" ? "🎬 filming… ~2 min" : genState === "failed" ? "try again 🎬" : "🎬 Make it a video (~$1)"}
+              {genState === "generating" ? <><IconVideo size={14} /> filming… ~2 min</> : genState === "failed" ? <><IconVideo size={14} /> try again</> : <><IconVideo size={14} /> Make it a video (~$1)</>}
             </button>
           )}
         </div>
@@ -217,7 +218,7 @@ function CoverCard({ topic, index, onOpen }) {
     <button className={`cover-card ${topic.mastered ? "mastered" : ""}`} onClick={onOpen}>
       {topic.scheduled_week && (
         <span className={`week-badge ${topic.dueNow ? "due" : ""}`}>
-          {topic.dueNow ? "📌 this week's homework" : `📅 week ${topic.scheduled_week}`}
+          {topic.dueNow ? <><IconPin size={12} /> this week's homework</> : <><IconCalendar size={12} /> week {topic.scheduled_week}</>}
         </span>
       )}
       <span className="topic-art">
@@ -380,7 +381,7 @@ export default function Workspace({ chapter, role, packs, onStartSession, onResu
         <nav>
           {NAV.filter(n => n.id !== "add" || role === "teacher").map(n => (
             <button key={n.id} className={`side-item ${tab === n.id ? "active" : ""}`} onClick={() => setTab(n.id)}>
-              <span className="side-icon">{n.icon}</span> {n.label}
+              <n.Icon size={15} className="side-icon" /> {n.label}
             </button>
           ))}
         </nav>
@@ -402,8 +403,8 @@ export default function Workspace({ chapter, role, packs, onStartSession, onResu
                 </p>
               </div>
               <div className="role-toggle learn-toggle">
-                <button className={learnView === "cards" ? "active" : ""} onClick={() => setLearnView("cards")}>🃏 Cards</button>
-                <button className={learnView === "reels" ? "active" : ""} onClick={() => setLearnView("reels")}>🎬 Reels</button>
+                <button className={learnView === "cards" ? "active" : ""} onClick={() => setLearnView("cards")}><IconCards size={14} /> Cards</button>
+                <button className={learnView === "reels" ? "active" : ""} onClick={() => setLearnView("reels")}><IconFilm size={14} /> Reels</button>
               </div>
             </div>
             {!topics && <p className="home-hint">Opening…</p>}

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { buildChapter, listChapters, chapterTopics, learnNext, listSessions, createCourse } from "../lib/backend.js";
 import learnersSeed from "../../packs/learners.json";
 import ClassInsights from "./ClassInsights.jsx";
+import { IconBook, IconSparkle, IconChart, IconPlay } from "./Icons.jsx";
 
 const SUGGESTED_TOPICS = [
   "Black Holes", "How Vaccines Work", "The French Revolution", "Photosynthesis",
@@ -70,7 +71,7 @@ export default function Library({ role, onOpenChapter, onResume, onViewReport, l
         <span className="book-cover">
           {m?.cover
             ? <img src={m.cover} alt="" loading="lazy" />
-            : <span className="book-cover-blank">📖</span>}
+            : <span className="book-cover-blank"><IconBook size={28} /></span>}
         </span>
         <span className="book-title">{c.title}</span>
         <span className="book-meta">{m ? `${m.mastered}/${m.total} taught` : c.source}</span>
@@ -99,7 +100,7 @@ export default function Library({ role, onOpenChapter, onResume, onViewReport, l
         </div>
         {lastSession && (
           <button className="resume-btn" onClick={() => onResume(lastSession)}>
-            ▶ Resume: {learnerName(lastSession.learner_id)} · {lastSession.pack_title || lastSession.pack_id}
+            <IconPlay size={13} /> Resume: {learnerName(lastSession.learner_id)} · {lastSession.pack_title || lastSession.pack_id}
           </button>
         )}
       </section>
@@ -113,17 +114,17 @@ export default function Library({ role, onOpenChapter, onResume, onViewReport, l
 
       {role === "teacher" && (
         <>
-          <h3 className="shelf-section-title">📊 Class insights</h3>
+          <h3 className="shelf-section-title"><IconChart size={17} /> Class insights</h3>
           <p className="home-hint">Built from your students' sessions — nothing to grade, nothing to set up. Red rows are tomorrow's reteach list.</p>
           <ClassInsights onViewReport={onViewReport} />
-          <h3 className="shelf-section-title" style={{ marginTop: 26 }}>📘 Class material</h3>
+          <h3 className="shelf-section-title" style={{ marginTop: 26 }}><IconBook size={17} /> Class material</h3>
         </>
       )}
 
       {error && <p className="drawpad-error">{error}</p>}
       {chapters === null && <p className="home-hint">Opening the shelf…</p>}
 
-      {role === "student" && <h3 className="shelf-section-title">📘 My courses <span className="shelf-sub">from your teacher</span></h3>}
+      {role === "student" && <h3 className="shelf-section-title"><IconBook size={17} /> My courses <span className="shelf-sub">from your teacher</span></h3>}
       <section className="shelf">
         {(role === "teacher" ? chapters || [] : courses).map(renderBook)}
         {role === "student" && courses.length === 0 && chapters !== null && (
@@ -188,7 +189,7 @@ export default function Library({ role, onOpenChapter, onResume, onViewReport, l
 
       {role === "student" && (
         <>
-          <h3 className="shelf-section-title">✨ Topics I'm curious about <span className="shelf-sub">learn anything, then teach it</span></h3>
+          <h3 className="shelf-section-title"><IconSparkle size={17} /> Topics I'm curious about <span className="shelf-sub">learn anything, then teach it</span></h3>
           <section className="shelf">
             {topics.map(renderBook)}
             <div className="book new-book">
@@ -204,7 +205,7 @@ export default function Library({ role, onOpenChapter, onResume, onViewReport, l
               <div className="suggest-chips">
                 {SUGGESTED_TOPICS.filter(t => !topics.some(c => c.title.toLowerCase().includes(t.toLowerCase()))).slice(0, 4).map(t => (
                   <button key={t} className="chapter-chip" onClick={() => build(t)} disabled={!!building}>
-                    {building === t ? "building…" : `✨ ${t}`}
+                    {building === t ? "building…" : <><IconSparkle size={12} /> {t}</>}
                   </button>
                 ))}
               </div>

@@ -13,6 +13,7 @@ import MiloFace from "./components/MiloFace.jsx";
 import fractionsPack from "../packs/fractions_division.json";
 import photosynthesisPack from "../packs/photosynthesis.json";
 import personas from "../packs/personas.json";
+import { IconStudent, IconApple, IconVideo } from "./components/Icons.jsx";
 
 const PACKS = [fractionsPack, photosynthesisPack];
 
@@ -66,7 +67,7 @@ function SessionScreen({ config, onHome }) {
         <span className="learner">
           {classroom ? "Class of 3" : `Your protégé: ${session.learner?.name || session.agentName}`}
         </span>
-        <button className="start-over" onClick={() => setView("call")}>🎥 Call view</button>
+        <button className="start-over" onClick={() => setView("call")}><IconVideo size={13} /> Call view</button>
         <button className="start-over" onClick={onHome}>Back</button>
       </div>
       <main className="panes">
@@ -141,8 +142,8 @@ export default function App() {
         <p className="tagline">they only learn if you truly understand</p>
         {inApp && (
           <div className="role-toggle" role="tablist" aria-label="View as">
-            <button className={role === "student" ? "active" : ""} onClick={() => switchRole("student")}>🎒 Student</button>
-            <button className={role === "teacher" ? "active" : ""} onClick={() => switchRole("teacher")}>🍎 Teacher</button>
+            <button className={role === "student" ? "active" : ""} onClick={() => switchRole("student")}><IconStudent size={14} /> Student</button>
+            <button className={role === "teacher" ? "active" : ""} onClick={() => switchRole("teacher")}><IconApple size={14} /> Teacher</button>
           </div>
         )}
         {screen.name === "landing" && (

@@ -449,10 +449,19 @@ body {
 .book-progress-fill { display: block; height: 100%; background: var(--highlighter); transition: width 0.4s ease; }
 
 .shelf-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-family: "Bricolage Grotesque", sans-serif;
   font-size: 1.12rem;
   margin: 20px 0 2px;
 }
+.shelf-section-title svg { color: var(--ballpoint); }
+.role-toggle button { display: inline-flex; align-items: center; gap: 6px; }
+.side-item { display: flex; align-items: center; gap: 8px; }
+.side-item svg { color: var(--ballpoint); flex-shrink: 0; }
+.week-badge { display: inline-flex; align-items: center; gap: 4px; }
+.week-badge svg { color: var(--ballpoint); }
 .shelf-sub { font-family: "Caveat", cursive; font-size: 1.05rem; color: var(--ballpoint); margin-left: 8px; font-weight: 400; }
 .new-book-hint { font-size: 0.78rem; color: var(--ink-soft); }
 .suggest-chips { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -486,6 +495,134 @@ body {
 }
 .stat-alert { border-color: var(--redpencil); }
 .stat-alert .stat-num { color: var(--redpencil); }
+
+.stat-icon { color: var(--ballpoint); margin-bottom: 4px; }
+.stat-alert .stat-icon { color: var(--redpencil); }
+
+/* charts — ballpoint fills only (yellow failed contrast as a data color) */
+.viz-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.viz-grid.three { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+@media (max-width: 860px) { .viz-grid { grid-template-columns: 1fr; } }
+
+.viz-card {
+  border: 1.5px solid var(--ink);
+  border-radius: 6px;
+  background: var(--paper);
+  box-shadow: 2px 2px 0 rgba(34, 37, 42, 0.1);
+  padding: 14px 16px;
+}
+.viz-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 0.95rem;
+  margin-bottom: 10px;
+  color: var(--ink);
+}
+.viz-title svg { color: var(--ballpoint); }
+.viz-note { font-family: "Caveat", cursive; font-size: 0.95rem; color: var(--ink-soft); font-weight: 400; margin-left: 4px; }
+.concepts-title { margin-top: 8px; }
+
+.viz-row { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
+.viz-label {
+  width: 38%;
+  min-width: 120px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.viz-track {
+  flex: 1;
+  height: 10px;
+  border: 1px solid var(--ink);
+  border-radius: 5px;
+  background: var(--paper);
+  overflow: hidden;
+}
+.viz-fill {
+  display: block;
+  height: 100%;
+  background: var(--ballpoint);
+  border-radius: 0 4px 4px 0;
+  transition: width 0.6s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.viz-fill.danger { background: var(--redpencil); }
+.viz-value { width: 42px; text-align: right; font-size: 0.8rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.skill-students { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(34,37,42,0.25); }
+
+.streak-row { display: flex; align-items: center; gap: 6px; font-size: 0.88rem; padding: 3px 0; }
+.streak-flame { color: var(--redpencil); }
+
+.prize-quote { font-family: "Caveat", cursive; font-size: 1.15rem; color: var(--ballpoint); line-height: 1.35; }
+.prize-quote svg { color: var(--highlighter); vertical-align: -2px; }
+.prize-by { font-size: 0.78rem; color: var(--ink-soft); margin-top: 6px; }
+.viz-card.prize { border-top: 4px solid var(--highlighter); }
+
+.viz-card.companion { border-top: 4px solid var(--ballpoint); }
+.companion-read { font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; }
+.companion-list { margin: 0 0 8px 18px; font-size: 0.85rem; display: flex; flex-direction: column; gap: 5px; }
+.companion-notes { border-top: 1px dashed rgba(34,37,42,0.25); padding-top: 8px; display: flex; flex-direction: column; gap: 5px; }
+.companion-notes p { font-size: 0.83rem; }
+
+/* accordion concepts */
+.accordion { padding: 0; overflow: hidden; }
+.accordion-head {
+  font: inherit;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+.accordion-head:hover { background: rgba(36, 86, 166, 0.04); }
+.accordion-chevron { transition: transform 0.2s ease; color: var(--ink-soft); flex-shrink: 0; }
+.accordion.open .accordion-chevron { transform: rotate(180deg); }
+.accordion-title { font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 1rem; flex: 1; min-width: 0; }
+.accordion-head .insight-meter { width: 110px; }
+.reteach-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--redpencil);
+  border: 1.5px solid var(--redpencil);
+  border-radius: 999px;
+  padding: 2px 10px;
+  white-space: nowrap;
+}
+.clear-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--highlighter);
+  border-radius: 999px;
+  padding: 3px 11px;
+  white-space: nowrap;
+}
+.accordion-body { padding: 4px 16px 14px; border-top: 1.5px solid var(--ink); animation: acc-open 0.25s ease; }
+@keyframes acc-open { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+.attempts { border-top: 1px dashed rgba(34,37,42,0.25); margin-top: 8px; padding-top: 10px; }
+.attempts-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+}
+.attempt { margin-bottom: 8px; }
+.attempt-who { font-size: 0.76rem; font-weight: 700; color: var(--ballpoint); }
+.attempt-text { font-size: 0.86rem; color: var(--ink); border-left: 2px solid var(--ballpoint); padding-left: 10px; margin-top: 3px; line-height: 1.45; }
 
 .insight-card {
   border: 1.5px solid var(--ink);
@@ -1971,3 +2108,9 @@ body {
   .report-overlay { position: static; background: none; padding: 0; }
   .report-sheet { border: none; box-shadow: none; max-width: none; padding: 0; }
 }
+
+/* Icon alignment in buttons + chips (post emoji sweep) */
+.voice-toggle, .ptt-btn, .chapter-chip, .resume-btn, .start-over, .learn-toggle button, .reel-gen, .teach-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+}
+.book-cover-blank svg { color: var(--ballpoint); opacity: 0.45; }

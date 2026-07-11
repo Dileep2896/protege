@@ -341,6 +341,55 @@ async function opReelPoll(ctx, body) {
   return json({ status: "completed", charged: st.charged_credits_usd }, 200);
 }
 
+// The class companion: one EverMind agent that follows the whole class. It reads
+// the aggregated evidence, advises the teacher, and writes an encouragement for
+// each student. Its own memory of the class accumulates in EverOS across runs.
+async function opCoach(ctx, body) {
+  if (!body.digest) return json({ error: "digest required" }, 400);
+
+  const prompt = [
+    "You are the CLASS COMPANION for a classroom where students prove understanding by teaching AI proteges.",
+    "You have followed this class across sessions. Here is today's evidence digest (computed from real sessions):",
+    JSON.stringify(body.digest, null, 1).slice(0, 6000),
+    "",
+    "Skills are 0-100 heuristics: communication (explains at length, uses examples), clarity (explanations actually resolve confusions), confidence (rarely hedges or answers in fragments — low = possible fear/anxiety).",
+    "Write for a busy teacher, concrete and kind. Output EXACTLY:",
+    '{"read": "one sentence on where the class is", "suggestions": ["3 specific, actionable teaching moves tied to the digest"], "encouragements": [{"student": "first name", "note": "1-2 sentences the teacher can pass on, referencing something real that student did"}]}',
+    "Never invent students or facts not in the digest. Output ONLY the JSON."
+  ].join("\\n");
+
+  const data = await llm(ctx, [{ role: "user", content: prompt }], { max_tokens: 1200, temperature: 0.4 });
+  const out = parseJson(data.choices[0].message.content || "");
+  if (!out.read || !Array.isArray(out.suggestions)) return json({ error: "coach output malformed" }, 502);
+
+  // The companion remembers the class in EverOS (non-fatal if unavailable).
+  if (ctx.env.EVEROS_API_KEY) {
+    try {
+      const now = Date.now();
+      await fetch("https://api.evermind.ai/api/v1/memories", {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: "Bearer " + ctx.env.EVEROS_API_KEY },
+        body: JSON.stringify({
+          user_id: "class_companion",
+          session_id: "class_" + new Date().toISOString().slice(0, 10),
+          async_mode: false,
+          messages: [
+            { role: "user", timestamp: now, content: "Class digest: " + JSON.stringify(body.digest).slice(0, 3000) },
+            { role: "assistant", timestamp: now + 1000, content: "My read: " + out.read + " Advice given: " + out.suggestions.join(" | ") }
+          ]
+        })
+      });
+      await fetch("https://api.evermind.ai/api/v1/memories/flush", {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: "Bearer " + ctx.env.EVEROS_API_KEY },
+        body: JSON.stringify({ user_id: "class_companion" })
+      });
+    } catch (err) { console.warn("companion everos write failed:", err.message); }
+  }
+
+  return json(out, 200);
+}
+
 async function opMastered(ctx, body) {
   await ctx.db.query("UPDATE topics SET mastered = true WHERE id = $1", [body.topic_id]);
   await cypher(ctx, "MATCH (t:Topic {id: $id}) SET t.mastered = true", { id: body.topic_id });
@@ -366,6 +415,7 @@ export default async function handler(req, ctx) {
       case "add_topic":  return await opAddTopic(ctx, body);
       case "extend":     return await opExtend(ctx, body);
       case "applications": return await opApplications(ctx, body);
+      case "coach":      return await opCoach(ctx, body);
       case "reel_start": return await opReelStart(ctx, body);
       case "reel_poll":  return await opReelPoll(ctx, body);
       case "illustrate": return await opIllustrate(ctx, body);

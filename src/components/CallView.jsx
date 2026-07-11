@@ -6,6 +6,7 @@ import MiloFace from "./MiloFace.jsx";
 import DrawPad from "./DrawPad.jsx";
 import { speechToText, speak, stopSpeaking, createRecorder } from "../lib/voice.js";
 import { listChapters, chapterTopics } from "../lib/backend.js";
+import { IconBook, IconMic, IconChat, IconSpeaker, IconSpeakerOff } from "./Icons.jsx";
 
 function YouTile({ name }) {
   const videoRef = useRef(null);
@@ -38,7 +39,7 @@ function Slides({ onClose }) {
         {chapters.length === 0 && <p className="home-hint">No chapters yet — build one from the home screen.</p>}
         {chapters.map(c => (
           <button key={c.id} className="chapter-chip" onClick={() => chapterTopics(c.id).then(ts => { setTopics(ts); setI(0); })}>
-            📖 {c.title}
+            <IconBook size={13} /> {c.title}
           </button>
         ))}
       </div>
@@ -189,13 +190,13 @@ export default function CallView({ session, pack, agents, onClassic }) {
           >
             {micState === "recording" ? "● listening — release to send"
               : micState === "transcribing" ? "…got it, sending"
-              : "🎙 hold to talk"}
+              : <><IconMic size={14} /> hold to talk</>}
           </button>
           <button className="voice-toggle" onClick={() => setChatOpen(!chatOpen)}>
-            {chatOpen ? "💬 hide chat" : "💬 chat"}
+            <IconChat size={14} /> {chatOpen ? "hide chat" : "chat"}
           </button>
           <button className="voice-toggle" onClick={() => { if (voiceOn) stopSpeaking(); setVoiceOn(!voiceOn); }}>
-            {voiceOn ? "🔊" : "🔇"}
+            {voiceOn ? <IconSpeaker size={15} /> : <IconSpeakerOff size={15} />}
           </button>
         </div>
       </div>
