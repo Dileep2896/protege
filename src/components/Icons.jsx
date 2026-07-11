@@ -73,3 +73,6 @@ export const IconVideo = p => (
 export const IconSpeakerOff = p => (
   <I {...p}><path d="M4.5 9.5v5H8l4.5 3.5v-12L8 9.5Z" /><path d="m15.5 10 5 5M20.5 10l-5 5" /></I>
 );
+export const IconPen = p => (
+  <I {...p}><path d="m14.5 5 4.5 4.5L8 20.5l-5 1 1-5L14.5 5Z" /><path d="m12.5 7 4.5 4.5" /></I>
+);

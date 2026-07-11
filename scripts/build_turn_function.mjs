@@ -84,7 +84,7 @@ export default async function handler(req, ctx) {
           body: JSON.stringify({
             model: "anthropic/claude-sonnet-4.6", max_tokens: 500, temperature: 0,
             messages: [{ role: "user", content: [
-              { type: "text", text: "Transcribe the handwriting in this image exactly, as plain text. Preserve math in typed notation (3/4, 1/2, divided by or \\u00f7, \\u00d7, =). Output ONLY the transcribed text \\u2014 no commentary, no quotes. If a word is hard to read, make your best guess from context." },
+              { type: "text", text: "This is a student's whiteboard. Read EVERYTHING on it \\u2014 both handwriting and drawings \\u2014 and produce the message the student is communicating, as plain text.\\n- Transcribe handwritten words exactly. Preserve math in typed notation (3/4, 1/2, divided by or \\u00f7, \\u00d7, =, \\u00b0 for degrees).\\n- Describe every drawn shape or diagram inline in brackets where it appears, faithfully and concretely: what shape it is, its orientation, and every label, angle mark, arrow, or measurement attached to it and WHERE each sits. Example: [drawing: a right triangle \\u2014 the right angle is marked with a small square at the bottom-right corner, a 30\\u00b0 angle is labeled at the bottom-left, and the slanted side runs from bottom-left up to top-right].\\n- Do not interpret, grade, or explain \\u2014 just report what is written and drawn so someone who cannot see the board fully understands it.\\nOutput ONLY the transcription with bracketed drawing descriptions \\u2014 no commentary, no quotes. If a word is hard to read, make your best guess from context." },
               { type: "image_url", image_url: { url: image } }
             ]}]
           })

@@ -97,7 +97,7 @@ export async function topicPack(topic_id) {
 
 export async function chapterTopics(chapter_id) {
   const rows = await request(
-    `/topics?chapter_id=eq.${chapter_id}&select=id,position,title,key_idea,summary,explanation,image,applications,scheduled_week,prereqs,mastered&order=position.asc`,
+    `/topics?chapter_id=eq.${chapter_id}&select=id,position,title,key_idea,summary,explanation,image,applications,scheduled_week,prereqs,mastered,pack&order=position.asc`,
     { method: "GET" }
   );
   return Array.isArray(rows) ? rows : [];

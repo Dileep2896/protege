@@ -2263,3 +2263,93 @@ body {
   .gb-detail { padding-left: 18px; }
 }
 .insight-meter-fill { background: var(--ballpoint); border-radius: 4px; }
+
+/* ── Call view: fixed full-viewport surface, zero page scroll ───────────── */
+.call {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--paper);
+  margin: 0;
+  padding: 12px 16px 14px;
+  box-sizing: border-box;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  grid-template-rows: minmax(0, 1fr);
+  align-items: stretch;
+}
+.call-main { height: 100%; min-height: 0; gap: 10px; }
+.stage { min-height: 0; }
+.stage-body { overflow: hidden; display: flex; min-height: 0; }
+.stage-body .drawpad-sheet.inline { flex: 1; display: flex; flex-direction: column; min-height: 0; width: 100%; }
+.drawpad-sheet.inline .drawpad-canvas { flex: 1; min-height: 0; height: auto; width: 100%; }
+.drawpad-sheet.inline .drawpad-toolbar { flex: none; }
+.drawpad-sheet.inline .drawpad-hint { display: none; }
+.drawpad-sheet.inline .drawpad-preview { flex: none; max-height: 38%; overflow-y: auto; }
+.drawpad-sheet.inline .drawpad-question { flex: none; }
+.call .tiles { flex: none; flex-wrap: nowrap; }
+.call .tile { width: 136px; height: 80px; }
+.call .agent-tile svg { width: 42px; height: 42px; }
+.call .tile-avatar { width: 38px; height: 38px; font-size: 1rem; }
+.call .tile-name { font-size: 0.64rem; }
+.call-caption { flex: none; max-height: 58px; padding: 7px 12px; font-size: 0.88rem; }
+.call-bar { flex: none; }
+.call-rail { max-height: none; height: 100%; min-height: 0; box-sizing: border-box; }
+.slides { min-height: 0; }
+.slide { overflow: hidden; }
+.slide img { max-height: 100%; }
+
+/* deck v2: kickers, highlighter vocabulary, world + quick-check cards */
+.hl-word {
+  background: linear-gradient(transparent 42%, color-mix(in srgb, var(--highlighter) 75%, transparent) 42% 90%, transparent 90%);
+  color: inherit;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+.deck-card { position: relative; }
+.deck-doodle {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 84px;
+  height: 60px;
+  object-fit: cover;
+  border: 1.5px solid var(--ink);
+  border-radius: 6px;
+  transform: rotate(2.5deg);
+  box-shadow: 2px 2px 0 rgba(34, 37, 42, 0.12);
+}
+.deck-world-title { font-size: 1.5rem; }
+.deck-world-how { font-size: 1.15rem; }
+.deck-check-q { font-size: 1.5rem; max-width: 560px; }
+.check-reveal {
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-top: 18px;
+  padding: 12px 22px;
+  border: 1.5px solid var(--ink);
+  border-radius: 6px;
+  background: var(--highlighter);
+  cursor: pointer;
+  box-shadow: 3px 3px 0 rgba(34, 37, 42, 0.15);
+}
+.check-reveal:hover { transform: translateY(-1px); }
+.deck-answer {
+  margin-top: 16px;
+  border-top: 1.5px dashed color-mix(in srgb, var(--ink) 35%, transparent);
+  padding-top: 14px;
+  max-width: 560px;
+  animation: acc-open 0.25s ease;
+}
+.deck-answer-main {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--ballpoint);
+  margin: 0 0 8px;
+}
+.deck-answer-why { font-size: 0.98rem; line-height: 1.55; margin: 0; }
+.drawpad-tools button { display: inline-flex; align-items: center; gap: 6px; }
+.write-btn { display: inline-flex; align-items: center; gap: 6px; }

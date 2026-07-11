@@ -131,19 +131,35 @@ function chunkText(text, maxLen = 190) {
 
 const readKey = id => `protege_read_${id}`;
 
+// Sweep the topic's own vocabulary with highlighter wherever it appears.
+function emphasize(text, terms) {
+  if (!terms.length || !text) return text;
+  const re = new RegExp(`(${terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")}|\\b\\d+(?:[/.]\\d+)?°?)`, "gi");
+  const parts = text.split(re);
+  return parts.map((p, n) => n % 2 === 1 ? <mark key={n} className="hl-word">{p}</mark> : p);
+}
+
 function TopicDeck({ topic, index, role, onTeach, teachBusy, onClose }) {
+  const apps = Array.isArray(topic.applications) ? topic.applications : [];
+  const check = topic.pack?.check_problem;
+  const terms = [...new Set((topic.title || "").split(/\W+/).filter(w => w.length >= 5).map(w => w.toLowerCase()))].slice(0, 4);
+  const steps = chunkText(topic.explanation);
   const cards = [
     { kind: "cover" },
-    ...chunkText(topic.explanation).map(text => ({ kind: "step", text })),
+    ...steps.map((text, n) => ({ kind: "step", text, n })),
     ...(topic.summary ? [{ kind: "short", text: topic.summary }] : []),
+    ...(apps.length ? [{ kind: "world", app: apps[0] }] : []),
+    ...(check ? [{ kind: "check", check }] : []),
     { kind: "finale" }
   ];
   const [i, setI] = useState(0);
   const [dir, setDir] = useState(1);
+  const [revealed, setRevealed] = useState(false);
   const go = n => {
     const next = Math.max(0, Math.min(cards.length - 1, n));
     setDir(next >= i ? 1 : -1);
     setI(next);
+    setRevealed(false);
     if (next === cards.length - 1) localStorage.setItem(readKey(topic.id), "1");
   };
 
@@ -168,7 +184,11 @@ function TopicDeck({ topic, index, role, onTeach, teachBusy, onClose }) {
           <button className="deck-close" onClick={onClose}>✕</button>
         </div>
 
-        <div key={i} className={`deck-card ${dir > 0 ? "from-right" : "from-left"}`} onClick={() => go(i + 1)}>
+        <div
+          key={i}
+          className={`deck-card ${dir > 0 ? "from-right" : "from-left"}`}
+          onClick={() => { if (c.kind === "check" && !revealed) { setRevealed(true); return; } go(i + 1); }}
+        >
           {c.kind === "cover" && (
             <>
               {topic.image && <img className="deck-art" src={topic.image} alt="" />}
@@ -178,11 +198,40 @@ function TopicDeck({ topic, index, role, onTeach, teachBusy, onClose }) {
               <p className="deck-key">{topic.key_idea}</p>
             </>
           )}
-          {c.kind === "step" && <p className="deck-step">{c.text}</p>}
+          {c.kind === "step" && (
+            <>
+              {topic.image && <img className="deck-doodle" src={topic.image} alt="" />}
+              <span className="deck-kicker">idea {c.n + 1} of {steps.length}</span>
+              <p className="deck-step">{emphasize(c.text, terms)}</p>
+            </>
+          )}
           {c.kind === "short" && (
             <>
               <span className="deck-kicker">in short</span>
-              <p className="deck-step">{c.text}</p>
+              <p className="deck-step">{emphasize(c.text, terms)}</p>
+            </>
+          )}
+          {c.kind === "world" && (
+            <>
+              <span className="deck-kicker">spot it in the wild</span>
+              <h3 className="deck-title deck-world-title">{c.app.where}</h3>
+              <p className="deck-step deck-world-how">{c.app.how}</p>
+            </>
+          )}
+          {c.kind === "check" && (
+            <>
+              <span className="deck-kicker">quick check — answer in your head first</span>
+              <h3 className="deck-title deck-check-q">{c.check.question}</h3>
+              {!revealed ? (
+                <button className="check-reveal" onClick={e => { e.stopPropagation(); setRevealed(true); }}>
+                  I've got my answer — show me
+                </button>
+              ) : (
+                <div className="deck-answer">
+                  <p className="deck-answer-main">{c.check.correct_answer}</p>
+                  {c.check.correct_reasoning && <p className="deck-answer-why">{c.check.correct_reasoning}</p>}
+                </div>
+              )}
             </>
           )}
           {c.kind === "finale" && (

@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 import { transcribeDrawing } from "../lib/backend.js";
 import MiloFace from "./MiloFace.jsx";
+import { IconPen } from "./Icons.jsx";
 
 const W = 880, H = 400;
 
@@ -119,7 +120,7 @@ export default function DrawPad({ lastMilo, onText, onSend, onClose, inline = fa
         {!preview && (
           <div className="drawpad-toolbar">
             <div className="drawpad-tools">
-              <button className={tool === "pen" ? "active" : ""} onClick={() => setTool("pen")}>✏️ Pen</button>
+              <button className={tool === "pen" ? "active" : ""} onClick={() => setTool("pen")}><IconPen size={13} /> Pen</button>
               <button className={tool === "eraser" ? "active" : ""} onClick={() => setTool("eraser")}>Eraser</button>
               <button onClick={clear}>Clear</button>
             </div>

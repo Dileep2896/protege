@@ -6,7 +6,7 @@ import MiloFace from "./MiloFace.jsx";
 import DrawPad from "./DrawPad.jsx";
 import { speechToText, speak, stopSpeaking, createRecorder } from "../lib/voice.js";
 import { listChapters, chapterTopics } from "../lib/backend.js";
-import { IconBook, IconMic, IconChat, IconSpeaker, IconSpeakerOff } from "./Icons.jsx";
+import { IconBook, IconMic, IconChat, IconSpeaker, IconSpeakerOff, IconFolder } from "./Icons.jsx";
 
 function YouTile({ name }) {
   const videoRef = useRef(null);
@@ -142,7 +142,7 @@ export default function CallView({ session, pack, agents, onClassic }) {
           <div className="stage-tabs">
             <button className={stage === "board" ? "active" : ""} onClick={() => setStage("board")}>Whiteboard</button>
             <button className={stage === "slides" ? "active" : ""} onClick={() => setStage("slides")}>Slides</button>
-            <button className="stage-exit" onClick={onClassic}>📝 Checklist view</button>
+            <button className="stage-exit" onClick={onClassic}><IconFolder size={13} /> Checklist view</button>
           </div>
           <div className="stage-body">
             {stage === "board" && (
@@ -171,9 +171,9 @@ export default function CallView({ session, pack, agents, onClassic }) {
             const m = lastAgentMsg(a.name);
             const mood = speaking === a.name ? "clicking" : (m?.mood || "confused");
             return (
-              <div key={a.name} className={`tile agent-tile ${speaking === a.name ? "speaking" : ""} ${session.thinking ? "waiting" : ""}`}>
+              <div key={a.name} className={`tile agent-tile ${speaking === a.name ? "speaking" : ""} ${session.thinking ? "waiting" : ""}`} title={`${a.name} · ${a.tag}`}>
                 <MiloFace mood={session.thinking ? "thinking" : mood} size={64} />
-                <span className="tile-name">{a.name} · {a.tag}</span>
+                <span className="tile-name">{a.name}</span>
               </div>
             );
           })}
@@ -220,7 +220,7 @@ export default function CallView({ session, pack, agents, onClassic }) {
               placeholder={micState === "transcribing" ? "hearing you…" : "type here…"}
               disabled={session.thinking || session.restoring}
             />
-            <button type="submit" disabled={!draft.trim() || session.thinking}>➤</button>
+            <button type="submit" disabled={!draft.trim() || session.thinking} aria-label="send">→</button>
           </form>
         </aside>
       )}

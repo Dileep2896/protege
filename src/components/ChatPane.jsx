@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import MiloFace from "./MiloFace.jsx";
 import DrawPad from "./DrawPad.jsx";
+import { IconPen } from "./Icons.jsx";
 
 export default function ChatPane({ messages, thinking, restoring, error, done, onSend, agentName = "Milo" }) {
   const [draft, setDraft] = useState("");
@@ -67,7 +68,7 @@ export default function ChatPane({ messages, thinking, restoring, error, done, o
           onClick={() => setDrawing(true)}
           disabled={thinking || restoring}
         >
-          ✏️ Write
+          <IconPen size={13} /> Write
         </button>
         <button type="submit" disabled={thinking || restoring || !draft.trim()}>
           {restoring ? "Opening notebook…" : thinking ? `${agentName} is thinking…` : `Teach ${agentName}`}
