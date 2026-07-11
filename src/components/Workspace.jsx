@@ -115,48 +115,131 @@ function AppSlide({ topic, app, appIndex }) {
   );
 }
 
-function FlipCard({ topic, index, onTeach, teachBusy, role }) {
-  const [flipped, setFlipped] = useState(false);
+// One thought per card. Reading is the 60-second intake; teaching is the proof.
+function chunkText(text, maxLen = 190) {
+  const sentences = (text || "").match(/[^.!?]+[.!?]+["']?\s*/g) || [text || ""];
+  const chunks = [];
+  let cur = "";
+  for (const s of sentences) {
+    if (cur && (cur + s).length > maxLen) { chunks.push(cur.trim()); cur = s; }
+    else cur += s;
+  }
+  if (cur.trim()) chunks.push(cur.trim());
+  return chunks;
+}
+
+const readKey = id => `protege_read_${id}`;
+
+function TopicDeck({ topic, index, role, onTeach, teachBusy, onClose }) {
+  const cards = [
+    { kind: "cover" },
+    ...chunkText(topic.explanation).map(text => ({ kind: "step", text })),
+    ...(topic.summary ? [{ kind: "short", text: topic.summary }] : []),
+    { kind: "finale" }
+  ];
+  const [i, setI] = useState(0);
+  const [dir, setDir] = useState(1);
+  const go = n => {
+    const next = Math.max(0, Math.min(cards.length - 1, n));
+    setDir(next >= i ? 1 : -1);
+    setI(next);
+    if (next === cards.length - 1) localStorage.setItem(readKey(topic.id), "1");
+  };
+
+  useEffect(() => {
+    const onKey = e => {
+      if (e.key === "ArrowRight" || e.key === " ") go(i + 1);
+      if (e.key === "ArrowLeft") go(i - 1);
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });   // eslint-disable-line
+
+  const c = cards[i];
   return (
-    <div className={`flip-card ${flipped ? "flipped" : ""} ${topic.mastered ? "mastered" : ""}`}>
-      <div className="flip-inner">
-        <button className="flip-face flip-front" onClick={() => setFlipped(true)}>
-          {topic.scheduled_week && (
-            <span className={`week-badge ${topic.dueNow ? "due" : ""}`}>
-              {topic.dueNow ? "📌 this week's homework" : `📅 week ${topic.scheduled_week}`}
-            </span>
+    <div className="report-overlay" onClick={onClose}>
+      <div className="deck" onClick={e => e.stopPropagation()}>
+        <div className="deck-progress">
+          {cards.map((_, n) => (
+            <button key={n} className={`deck-dot ${n === i ? "on" : n < i ? "done" : ""}`} onClick={() => go(n)} aria-label={`card ${n + 1}`} />
+          ))}
+          <button className="deck-close" onClick={onClose}>✕</button>
+        </div>
+
+        <div key={i} className={`deck-card ${dir > 0 ? "from-right" : "from-left"}`} onClick={() => go(i + 1)}>
+          {c.kind === "cover" && (
+            <>
+              {topic.image && <img className="deck-art" src={topic.image} alt="" />}
+              <span className="topic-num">topic {String(index + 1).padStart(2, "0")}</span>
+              <h3 className="deck-title">{topic.title}</h3>
+              <p className="deck-key">{topic.key_idea}</p>
+            </>
           )}
-          <span className="topic-art">
-            {topic.image
-              ? <img src={topic.image} alt="" loading="lazy" />
-              : <span className="topic-art-loading"><span className="dot" /><span className="dot" /><span className="dot" /> sketching…</span>}
-            {topic.mastered && <span className="mastered-stamp">taught ✓</span>}
-          </span>
-          <span className="flip-front-body">
-            <span className="topic-num">{String(index + 1).padStart(2, "0")}</span>
-            <span className="flip-title">{topic.title}</span>
-            <span className="topic-key">{topic.key_idea}</span>
-            <span className="flip-hint">tap to open ↻</span>
-          </span>
-        </button>
-        <div className="flip-face flip-back">
-          <h4>{topic.title}</h4>
-          <p className="flip-explanation">{topic.explanation}</p>
-          <div className="flip-actions">
-            <button className="teach-btn" onClick={() => onTeach(topic)} disabled={!!teachBusy}>
-              {teachBusy === topic.id ? "Preparing your protégé…" : role === "teacher" ? "Preview lesson" : topic.mastered ? "Teach it again" : "Now teach it"}
-            </button>
-            <button className="link-btn" onClick={() => setFlipped(false)}>flip back ↻</button>
-          </div>
+          {c.kind === "step" && <p className="deck-step">{c.text}</p>}
+          {c.kind === "short" && (
+            <>
+              <span className="deck-kicker">in short</span>
+              <p className="deck-step">{c.text}</p>
+            </>
+          )}
+          {c.kind === "finale" && (
+            <>
+              <span className="deck-kicker">that's the whole idea</span>
+              <h3 className="deck-title">Think you've got it?</h3>
+              <p className="deck-key">Reading isn't proof — teaching is. {role === "teacher" ? "Preview the lesson your students get." : "Explain it until it clicks for them."}</p>
+              <button
+                className="hero-cta deck-teach"
+                onClick={e => { e.stopPropagation(); onTeach(topic); }}
+                disabled={!!teachBusy}
+              >
+                {teachBusy === topic.id ? "Preparing your protégé…" : role === "teacher" ? "Preview lesson" : "Teach it now →"}
+              </button>
+              <button className="link-btn" onClick={e => { e.stopPropagation(); go(0); }}>read it again</button>
+            </>
+          )}
+          {c.kind !== "finale" && <span className="deck-tap-hint">tap / → for next</span>}
+        </div>
+
+        <div className="deck-nav">
+          <button onClick={() => go(i - 1)} disabled={i === 0}>← back</button>
+          <span className="deck-count">{i + 1} / {cards.length}</span>
+          <button onClick={() => go(i + 1)} disabled={i === cards.length - 1}>next →</button>
         </div>
       </div>
     </div>
   );
 }
 
+function CoverCard({ topic, index, onOpen }) {
+  const read = !!localStorage.getItem(readKey(topic.id));
+  return (
+    <button className={`cover-card ${topic.mastered ? "mastered" : ""}`} onClick={onOpen}>
+      {topic.scheduled_week && (
+        <span className={`week-badge ${topic.dueNow ? "due" : ""}`}>
+          {topic.dueNow ? "📌 this week's homework" : `📅 week ${topic.scheduled_week}`}
+        </span>
+      )}
+      <span className="topic-art">
+        {topic.image
+          ? <img src={topic.image} alt="" loading="lazy" />
+          : <span className="topic-art-loading"><span className="dot" /><span className="dot" /><span className="dot" /> sketching…</span>}
+        {topic.mastered && <span className="mastered-stamp">taught ✓</span>}
+      </span>
+      <span className="flip-front-body">
+        <span className="topic-num">{String(index + 1).padStart(2, "0")}{read && !topic.mastered ? " · read ✓" : ""}</span>
+        <span className="flip-title">{topic.title}</span>
+        <span className="topic-key">{topic.key_idea}</span>
+        <span className="flip-hint">open the deck ↗</span>
+      </span>
+    </button>
+  );
+}
+
 export default function Workspace({ chapter, role, packs, onStartSession, onResume, onViewReport, onBack }) {
   const [tab, setTab] = useState("learn");
   const [learnView, setLearnView] = useState("cards");   // cards | reels
+  const [openDeck, setOpenDeck] = useState(null);        // topic id whose deck is open
   const [topics, setTopics] = useState(null);
   const [teachBusy, setTeachBusy] = useState(null);
   const [error, setError] = useState(null);
@@ -314,8 +397,8 @@ export default function Workspace({ chapter, role, packs, onStartSession, onResu
                 <h2 className="work-title">Learn {chapter.title}</h2>
                 <p className="home-hint">
                   {learnView === "cards"
-                    ? "Flip a card to read it. When it makes sense, prove it — teach it."
-                    : "Scroll like a feed. Each topic is a short concept clip."}
+                    ? "Open a deck — one idea per card, a minute per topic. The last card hands you the chalk."
+                    : "The hook reel: where each idea shows up in the real world."}
                 </p>
               </div>
               <div className="role-toggle learn-toggle">
@@ -327,10 +410,23 @@ export default function Workspace({ chapter, role, packs, onStartSession, onResu
             {learnView === "cards" && (
               <div className="cards-grid">
                 {topics?.map((t, i) => (
-                  <FlipCard key={t.id} topic={t} index={i} onTeach={teach} teachBusy={teachBusy} role={role} />
+                  <CoverCard key={t.id} topic={t} index={i} onOpen={() => setOpenDeck(t.id)} />
                 ))}
               </div>
             )}
+            {openDeck && topics && (() => {
+              const t = topics.find(x => x.id === openDeck);
+              return t ? (
+                <TopicDeck
+                  topic={t}
+                  index={topics.indexOf(t)}
+                  role={role}
+                  onTeach={teach}
+                  teachBusy={teachBusy}
+                  onClose={() => setOpenDeck(null)}
+                />
+              ) : null;
+            })()}
             {learnView === "reels" && topics && (() => {
               const slides = topics.flatMap((t, i) => [
                 { kind: "main", t, i },
