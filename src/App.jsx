@@ -52,7 +52,7 @@ function SessionScreen({ config, onHome }) {
   if (view === "call") {
     return (
       <>
-        <CallView session={session} pack={pack} agents={agents} onClassic={() => setView("classic")} />
+        <CallView session={session} pack={pack} agents={agents} onClassic={() => setView("classic")} chapterId={config.chapterId} />
         {session.showReport && session.report && (
           <ReportView report={session.report} onClose={() => session.setShowReport(false)} />
         )}

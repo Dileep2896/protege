@@ -79,7 +79,7 @@ function ReelMain({ topic, index, onTeach, teachBusy, role }) {
         <video src={videoSrc} autoPlay loop muted playsInline />
       ) : (
         <div className="reel-placeholder" style={topic.image ? { backgroundImage: `url(${topic.image})` } : {}}>
-          {checked && (
+          {checked && role === "teacher" && (
             <button className="reel-gen" onClick={generate} disabled={genState === "generating"}>
               {genState === "generating" ? <><IconVideo size={14} /> filming… ~2 min</> : genState === "failed" ? <><IconVideo size={14} /> try again</> : <><IconVideo size={14} /> Make it a video (~$1)</>}
             </button>
@@ -359,7 +359,7 @@ export default function Workspace({ chapter, role, packs, onStartSession, onResu
     setError(null);
     try {
       const { pack } = await packForTopic(topic.id);
-      onStartSession({ packObj: pack, learnerId, level, startInCall: true });
+      onStartSession({ packObj: pack, learnerId, level, startInCall: true, chapterId: chapter.id });
     } catch (err) {
       setError(`Couldn't build the lesson: ${err.message}`);
     } finally {
@@ -550,7 +550,7 @@ export default function Workspace({ chapter, role, packs, onStartSession, onResu
                 <li key={p.id}>
                   <span className="teach-status">★</span>
                   <span className="teach-topic">{p.title}</span>
-                  <button className="teach-btn" onClick={() => onStartSession({ packId: p.id, learnerId, level, startInCall: true })}>
+                  <button className="teach-btn" onClick={() => onStartSession({ packId: p.id, learnerId, level, startInCall: true, chapterId: chapter.id })}>
                     {role === "teacher" ? "Preview" : `Teach ${agentFirst}`}
                   </button>
                 </li>

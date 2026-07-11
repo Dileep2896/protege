@@ -19,9 +19,13 @@ export async function speechToText(blob) {
   return data.text;
 }
 
-// Speaks text. Resolves when playback ends. Groq TTS when available,
+// Speaks text. Resolves when playback ends. Gateway TTS when available,
 // otherwise browser speechSynthesis — the call never goes silent.
-export async function speak(text, { voice = "zac", rate = 1.05 } = {}) {
+// onStart fires the moment audio actually begins (synthesis can take a
+// second or two) so the UI can reveal the text in sync with the voice.
+export async function speak(text, { voice = "zac", rate = 1.05, onStart } = {}) {
+  let started = false;
+  const fireStart = () => { if (!started) { started = true; try { onStart?.(); } catch { /* ui only */ } } };
   try {
     const res = await fetch(`${API_BASE}/fn/voice`, {
       method: "POST",
@@ -33,15 +37,17 @@ export async function speak(text, { voice = "zac", rate = 1.05 } = {}) {
       const url = URL.createObjectURL(await res.blob());
       await new Promise((resolve, reject) => {
         const a = new Audio(url);
+        a.onplaying = fireStart;
         a.onended = resolve;
         a.onerror = reject;
         a.play().catch(reject);
       });
       URL.revokeObjectURL(url);
+      fireStart();   // safety: never leave the text hidden
       return "groq";
     }
   } catch (err) {
-    console.warn("[milo] groq tts unavailable:", err.message);
+    console.warn("[milo] gateway tts unavailable:", err.message);
   }
   // Fallback: browser voice.
   await new Promise(resolve => {
@@ -51,10 +57,12 @@ export async function speak(text, { voice = "zac", rate = 1.05 } = {}) {
     const voices = speechSynthesis.getVoices();
     u.voice = voices.find(v => /en[-_]US/i.test(v.lang) && /male|boy|fred|alex|daniel/i.test(v.name))
       || voices.find(v => /en/i.test(v.lang)) || null;
+    u.onstart = fireStart;
     u.onend = resolve;
     u.onerror = resolve;
     speechSynthesis.speak(u);
   });
+  fireStart();
   return "browser";
 }
 

@@ -7,6 +7,7 @@ import DrawPad from "./DrawPad.jsx";
 import { speechToText, speak, stopSpeaking, createRecorder } from "../lib/voice.js";
 import { listChapters, chapterTopics } from "../lib/backend.js";
 import { IconBook, IconMic, IconChat, IconSpeaker, IconSpeakerOff, IconFolder } from "./Icons.jsx";
+import Loader from "./Loader.jsx";
 
 function YouTile({ name }) {
   const videoRef = useRef(null);
@@ -27,18 +28,32 @@ function YouTile({ name }) {
   );
 }
 
-function Slides({ onClose }) {
+function Slides({ chapterId }) {
   const [chapters, setChapters] = useState([]);
   const [topics, setTopics] = useState(null);
+  const [busy, setBusy] = useState(!!chapterId);
   const [i, setI] = useState(0);
   useEffect(() => { listChapters().then(setChapters).catch(() => {}); }, []);
+
+  function open(id) {
+    setBusy(true);
+    chapterTopics(id)
+      .then(ts => { setTopics(ts); setI(0); })
+      .catch(() => {})
+      .finally(() => setBusy(false));
+  }
+
+  // The session already knows its course — open its slides directly.
+  useEffect(() => { if (chapterId) open(chapterId); }, [chapterId]);   // eslint-disable-line
+
+  if (busy && !topics) return <Loader label="laying out the slides…" />;
   if (!topics) {
     return (
       <div className="slides-picker">
         <p className="section-label">Present a chapter</p>
         {chapters.length === 0 && <p className="home-hint">No chapters yet — build one from the home screen.</p>}
         {chapters.map(c => (
-          <button key={c.id} className="chapter-chip" onClick={() => chapterTopics(c.id).then(ts => { setTopics(ts); setI(0); })}>
+          <button key={c.id} className="chapter-chip" onClick={() => open(c.id)}>
             <IconBook size={13} /> {c.title}
           </button>
         ))}
@@ -65,29 +80,42 @@ function Slides({ onClose }) {
   );
 }
 
-export default function CallView({ session, pack, agents, onClassic }) {
+export default function CallView({ session, pack, agents, onClassic, chapterId }) {
   const [stage, setStage] = useState("board");           // board | slides
   const [micState, setMicState] = useState("idle");      // idle | recording | transcribing
   const [voiceOn, setVoiceOn] = useState(true);
   const [chatOpen, setChatOpen] = useState(false);       // talk-first; chat on demand
   const [speaking, setSpeaking] = useState(null);        // agent name currently speaking
+  const [pendingVoice, setPendingVoice] = useState(() => new Set());   // msg indices held until audio starts
   const [draft, setDraft] = useState("");
   const recorder = useRef(createRecorder());
   const spokenCount = useRef(session.messages.length);
   const chatRef = useRef(null);
 
-  // Speak each new agent message aloud (queued in order).
+  // Speak each new agent message aloud (queued in order). The text stays
+  // hidden until the audio actually starts, so voice and words land together.
   useEffect(() => {
-    if (!voiceOn) { spokenCount.current = session.messages.length; return; }
-    const fresh = session.messages.slice(spokenCount.current).filter(m => m.who === "milo");
+    if (!voiceOn) { spokenCount.current = session.messages.length; setPendingVoice(new Set()); return; }
+    const startIdx = spokenCount.current;
+    const fresh = session.messages.slice(startIdx)
+      .map((m, j) => ({ m, idx: startIdx + j }))
+      .filter(x => x.m.who === "milo");
     if (!fresh.length) { spokenCount.current = session.messages.length; return; }
     spokenCount.current = session.messages.length;
+    setPendingVoice(prev => { const s = new Set(prev); fresh.forEach(x => s.add(x.idx)); return s; });
+    // failsafe: autoplay-blocked browsers must still get the text
+    const failsafe = setTimeout(() => {
+      setPendingVoice(prev => { const s = new Set(prev); fresh.forEach(x => s.delete(x.idx)); return s; });
+    }, 6000);
     (async () => {
-      for (const m of fresh) {
+      for (const { m, idx } of fresh) {
         const agent = agents.find(a => a.name === m.name) || agents[0];
         setSpeaking(agent.name);
-        try { await speak(m.text, { voice: agent.voice }); } catch { /* keep going */ }
+        const reveal = () => setPendingVoice(prev => { const s = new Set(prev); s.delete(idx); return s; });
+        try { await speak(m.text, { voice: agent.voice, onStart: reveal }); } catch { /* keep going */ }
+        reveal();   // safety: never leave a reply hidden
       }
+      clearTimeout(failsafe);
       setSpeaking(null);
     })();
   }, [session.messages, voiceOn]);   // eslint-disable-line
@@ -131,9 +159,11 @@ export default function CallView({ session, pack, agents, onClassic }) {
     session.sendTurn(t);
   }
 
+  const visibleMessages = session.messages.filter((_, i) => !pendingVoice.has(i));
   const lastAgentMsg = name =>
-    [...session.messages].reverse().find(m => m.who === "milo" && (m.name || agents[0].name) === name);
-  const lastMsg = session.messages[session.messages.length - 1];
+    [...visibleMessages].reverse().find(m => m.who === "milo" && (m.name || agents[0].name) === name);
+  const lastMsg = visibleMessages[visibleMessages.length - 1];
+  const voiceBrewing = pendingVoice.size > 0;
 
   return (
     <div className={`call ${chatOpen ? "" : "chat-closed"}`}>
@@ -155,14 +185,24 @@ export default function CallView({ session, pack, agents, onClassic }) {
                 onClose={() => {}}
               />
             )}
-            {stage === "slides" && <Slides />}
+            {stage === "slides" && <Slides chapterId={chapterId} />}
           </div>
         </div>
 
-        {!chatOpen && lastMsg && (
-          <div className="call-caption">
-            <span className="rail-who">{lastMsg.who === "milo" ? (lastMsg.name || agents[0].name) : "You"}:</span>{" "}
-            {lastMsg.text}
+        {!chatOpen && (voiceBrewing || lastMsg) && (
+          <div className={`call-caption ${voiceBrewing ? "brewing" : ""}`}>
+            {voiceBrewing ? (
+              <>
+                <span className="rail-who">{speaking || agents[0].name}</span>
+                <span className="brew-dots" aria-label="about to speak"><i /><i /><i /></span>
+                <span className="brew-hint">about to say it out loud…</span>
+              </>
+            ) : (
+              <>
+                <span className="rail-who">{lastMsg.who === "milo" ? (lastMsg.name || agents[0].name) : "You"}:</span>{" "}
+                {lastMsg.text}
+              </>
+            )}
           </div>
         )}
 
@@ -214,12 +254,18 @@ export default function CallView({ session, pack, agents, onClassic }) {
         <aside className="call-rail">
           <p className="section-label">Class chat · {pack.title}</p>
           <div className="rail-chat" ref={chatRef}>
-            {session.messages.map((m, i) => (
+            {visibleMessages.map((m, i) => (
               <div key={i} className={`rail-msg ${m.who}`}>
                 <span className="rail-who">{m.who === "milo" ? (m.name || agents[0].name) : "You"}</span>
                 <span className="rail-text">{m.text}</span>
               </div>
             ))}
+            {voiceBrewing && (
+              <div className="rail-msg milo">
+                <span className="rail-who">{speaking || agents[0].name}</span>
+                <span className="rail-text brew-dots-inline"><span className="brew-dots"><i /><i /><i /></span></span>
+              </div>
+            )}
             {session.thinking && <div className="rail-msg milo"><span className="rail-who">…</span><span className="rail-text">thinking</span></div>}
           </div>
           <form className="rail-composer" onSubmit={sendDraft}>
