@@ -12,7 +12,7 @@ import {
 } from "../lib/backend.js";
 import learnersSeed from "../../packs/learners.json";
 import personas from "../../packs/personas.json";
-import { IconBook, IconMap, IconCap, IconFolder, IconPlus, IconCalendar, IconPin, IconCards, IconFilm, IconVideo } from "./Icons.jsx";
+import { IconBook, IconMap, IconCap, IconFolder, IconPlus, IconCalendar, IconPin, IconCards, IconFilm, IconVideo, IconSpeaker, IconSpeakerOff } from "./Icons.jsx";
 import Loader from "./Loader.jsx";
 
 const NAV = [
@@ -37,6 +37,7 @@ function ReelMain({ topic, index, onTeach, teachBusy, role }) {
   const [videoSrc, setVideoSrc] = useState(null);
   const [genState, setGenState] = useState("idle");   // idle | generating | failed
   const [checked, setChecked] = useState(false);
+  const [sound, setSound] = useState(false);          // autoplay must start muted; one tap turns sound on
 
   useEffect(() => {
     // videos are heavy, fetched lazily per slide
@@ -76,7 +77,12 @@ function ReelMain({ topic, index, onTeach, teachBusy, role }) {
   return (
     <>
       {videoSrc ? (
-        <video src={videoSrc} autoPlay loop muted playsInline />
+        <>
+          <video src={videoSrc} autoPlay loop muted={!sound} playsInline onClick={() => setSound(s => !s)} />
+          <button className="reel-sound" onClick={() => setSound(s => !s)} aria-label={sound ? "mute" : "unmute"}>
+            {sound ? <IconSpeaker size={14} /> : <><IconSpeakerOff size={14} /> tap for sound</>}
+          </button>
+        </>
       ) : (
         <div className="reel-placeholder" style={topic.image ? { backgroundImage: `url(${topic.image})` } : {}}>
           {checked && role === "teacher" && (
