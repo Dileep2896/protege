@@ -51,7 +51,7 @@ export function skillsFor(entries) {
     return {
       learner_id,
       turns: turns.length,
-      communication: clamp((Math.min(avgWords, 90) / 90) * 70 + analogyRate * 30),
+      communication: clamp((Math.min(avgWords, 55) / 55) * 65 + analogyRate * 35),
       clarity: clamp((resolved / Math.max(1, turns.length)) * 90 + (resolved ? 10 : 0)),
       confidence: clamp(100 - hedgeRate * 55 - fragmentRate * 40)
     };

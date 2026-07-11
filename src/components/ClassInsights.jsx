@@ -1,6 +1,6 @@
-// ClassInsights — the teacher's morning briefing. Headline numbers, charts,
-// teaching-skill estimates, streaks, a best-explanation prize, and the EverMind
-// class companion. Details stay collapsed until the teacher asks for them.
+// ClassInsights — the teacher's morning briefing, laid out like a gradebook.
+// A ledger of headline numbers, two charts, a student roster that opens into
+// each student's full picture, and the EverMind class companion.
 // All metrics are computed client-side from real sessions (src/model/insights.js).
 import { useEffect, useMemo, useState } from "react";
 import { listSessions, topicPack, askCoach } from "../lib/backend.js";
@@ -14,7 +14,10 @@ import fractionsPack from "../../packs/fractions_division.json";
 import photosynthesisPack from "../../packs/photosynthesis.json";
 
 const BUILTIN = { [fractionsPack.id]: fractionsPack, [photosynthesisPack.id]: photosynthesisPack };
-const firstName = id => (learnersSeed.learners.find(l => l.id === id)?.name || id).split(" ")[0];
+const PEOPLE = [...learnersSeed.learners, ...(learnersSeed.classmates || [])];
+const fullName = id => PEOPLE.find(l => l.id === id)?.name || id;
+const firstName = id => fullName(id).split(" ")[0];
+const initials = id => fullName(id).split(" ").map(w => w[0]).slice(0, 2).join("");
 
 function Bar({ label, pct, danger }) {
   return (
@@ -32,6 +35,7 @@ export default function ClassInsights({ onViewReport }) {
   const [sessions, setSessions] = useState(null);
   const [topicBeliefs, setTopicBeliefs] = useState({});
   const [openConcept, setOpenConcept] = useState(null);
+  const [openStudent, setOpenStudent] = useState(null);
   const [coach, setCoach] = useState(null);
   const [coachBusy, setCoachBusy] = useState(false);
 
@@ -62,20 +66,50 @@ export default function ClassInsights({ onViewReport }) {
       c.students.push(e);
     }
     const list = Object.values(concepts).map(c => {
-      const mids = Object.keys(c.students[0]?.misconceptions || {}).sort();
-      const total = mids.length * c.students.length;
-      const solved = mids.reduce((n, mid) => n + c.students.filter(s => s.misconceptions[mid] === "resolved").length, 0);
+      const midSet = new Set(c.students.flatMap(s => Object.keys(s.misconceptions)));
+      const mids = [...midSet].sort();
+      const total = c.students.reduce((n, s) => n + Object.keys(s.misconceptions).length, 0);
+      const solved = c.students.reduce((n, s) => n + Object.values(s.misconceptions).filter(v => v === "resolved").length, 0);
       return { ...c, mids, total, solved, pct: total ? Math.round((solved / total) * 100) : 0 };
     }).filter(c => c.students.length);
+
     const perLearner = skillsFor(entries);
+    const streaks = streaksFor(sessions);
+    const streakOf = Object.fromEntries(streaks.map(s => [s.learner_id, s.streak]));
+    const lastOf = {};
+    for (const s of sessions) {
+      const t = new Date(s.created_at).getTime();
+      if (!lastOf[s.learner_id] || t > lastOf[s.learner_id]) lastOf[s.learner_id] = t;
+    }
+
+    // per-student roster: mastery, skills, streak, their concepts
+    const students = [...new Set(entries.map(e => e.learner_id))].map(id => {
+      const mine = entries.filter(e => e.learner_id === id);
+      const total = mine.reduce((n, e) => n + Object.keys(e.misconceptions).length, 0);
+      const solved = mine.reduce((n, e) => n + Object.values(e.misconceptions).filter(v => v === "resolved").length, 0);
+      let quote = null;
+      for (const e of mine)
+        for (const q of Object.values(e.evidence))
+          if (q && (!quote || q.length > quote.length)) quote = q;
+      return {
+        id, entries: mine, total, solved,
+        pct: total ? Math.round((solved / total) * 100) : 0,
+        skills: perLearner.find(s => s.learner_id === id),
+        streak: streakOf[id] || 0,
+        last: lastOf[id],
+        quote,
+        sessionCount: sessions.filter(s => s.learner_id === id).length
+      };
+    }).sort((a, b) => b.pct - a.pct);
+
     return {
-      entries, list, perLearner,
+      entries, list, perLearner, students,
       skills: classSkills(perLearner),
-      streaks: streaksFor(sessions),
+      streaks,
       best: bestExplanation(entries),
-      reteach: list.reduce((n, c) => n + c.mids.filter(mid => c.students.some(s => s.misconceptions[mid] !== "resolved")).length, 0),
+      reteach: list.reduce((n, c) => n + c.mids.filter(mid => c.students.some(s => s.misconceptions[mid] && s.misconceptions[mid] !== "resolved")).length, 0),
       reports: entries.filter(e => e.report).length,
-      activeCount: new Set(entries.map(e => e.learner_id)).size
+      activeCount: students.length
     };
   }, [sessions]);
 
@@ -98,7 +132,7 @@ export default function ClassInsights({ onViewReport }) {
         concepts: model.list.map(c => ({
           title: c.title, mastery_pct: c.pct,
           still_confused_about: c.mids
-            .filter(mid => c.students.some(s => s.misconceptions[mid] !== "resolved"))
+            .filter(mid => c.students.some(s => s.misconceptions[mid] && s.misconceptions[mid] !== "resolved"))
             .map(mid => beliefOf(c.pack_id, mid).slice(0, 120)).slice(0, 4)
         })),
         student_skills: model.perLearner.map(s => ({
@@ -118,13 +152,28 @@ export default function ClassInsights({ onViewReport }) {
     }
   }
 
+  const classMastery = model.list.length ? Math.round(model.list.reduce((n, c) => n + c.pct, 0) / model.list.length) : 0;
+
   return (
     <div className="insights">
-      <div className="insight-stats">
-        <div className="stat-tile"><IconStudent size={20} className="stat-icon" /><span className="stat-num">{model.activeCount}</span><span className="stat-label">students active</span></div>
-        <div className="stat-tile"><IconChart size={20} className="stat-icon" /><span className="stat-num">{model.list.length ? Math.round(model.list.reduce((n, c) => n + c.pct, 0) / model.list.length) : 0}%</span><span className="stat-label">class mastery</span></div>
-        <div className={`stat-tile ${model.reteach ? "stat-alert" : ""}`}><IconTarget size={20} className="stat-icon" /><span className="stat-num">{model.reteach}</span><span className="stat-label">to reteach</span></div>
-        <div className="stat-tile"><IconFolder size={20} className="stat-icon" /><span className="stat-num">{model.reports}</span><span className="stat-label">reports ready</span></div>
+      {/* headline ledger — numbers on a rule, no boxes */}
+      <div className="ledger">
+        <div className="ledger-stat">
+          <span className="ledger-num">{model.activeCount}</span>
+          <span className="ledger-label"><IconStudent size={13} /> students teaching</span>
+        </div>
+        <div className="ledger-stat">
+          <span className="ledger-num">{classMastery}%</span>
+          <span className="ledger-label"><IconChart size={13} /> class mastery</span>
+        </div>
+        <div className={`ledger-stat ${model.reteach ? "alert" : ""}`}>
+          <span className="ledger-num">{model.reteach}</span>
+          <span className="ledger-label"><IconTarget size={13} /> to reteach</span>
+        </div>
+        <div className="ledger-stat">
+          <span className="ledger-num">{model.reports}</span>
+          <span className="ledger-label"><IconFolder size={13} /> reports ready</span>
+        </div>
       </div>
 
       <div className="viz-grid">
@@ -133,44 +182,98 @@ export default function ClassInsights({ onViewReport }) {
           {model.list.map(c => <Bar key={c.pack_id} label={c.title} pct={c.pct} />)}
         </section>
         <section className="viz-card">
-          <h4 className="viz-title"><IconStudent size={15} /> Teaching skills <span className="viz-note">estimated from real sessions</span></h4>
+          <h4 className="viz-title"><IconStudent size={15} /> Class teaching skills <span className="viz-note">estimated from real sessions</span></h4>
           {model.skills && (
             <>
               <Bar label="Communication" pct={model.skills.communication} />
               <Bar label="Clarity" pct={model.skills.clarity} />
-              <Bar label="Confidence" pct={model.skills.confidence} danger={model.skills.confidence < 45} />
+              <Bar label="Confidence" pct={model.skills.confidence} />
             </>
           )}
-          <div className="skill-students">
-            {model.perLearner.filter(s => s.turns > 0).map(s => (
-              <span key={s.learner_id} className="student-chip" title={`communication ${s.communication} · clarity ${s.clarity} · confidence ${s.confidence}`}>
-                {firstName(s.learner_id)} · {Math.round((s.communication + s.clarity + s.confidence) / 3)}
-              </span>
-            ))}
-          </div>
+          <p className="viz-foot">Communication — length and analogies. Clarity — how much confusion each explanation resolves. Confidence — how rarely they hedge.</p>
         </section>
       </div>
 
-      <div className="viz-grid three">
-        <section className="viz-card mini">
-          <h4 className="viz-title"><IconFlame size={15} /> Teaching streaks</h4>
-          {model.streaks.length === 0 && <p className="home-hint">No streaks yet — they start with today's homework.</p>}
-          {model.streaks.map(s => (
-            <p key={s.learner_id} className="streak-row">
-              <IconFlame size={14} className="streak-flame" /> <strong>{firstName(s.learner_id)}</strong> — {s.streak} day{s.streak === 1 ? "" : "s"} teaching
-            </p>
-          ))}
-        </section>
-        <section className="viz-card mini prize">
-          <h4 className="viz-title"><IconTrophy size={15} /> Best explanation</h4>
+      {/* the roster — every student, one ruled line each */}
+      <h4 className="viz-title roster-title"><IconStudent size={15} /> The class, one by one <span className="viz-note">open a row for their full picture</span></h4>
+      <div className="gradebook">
+        <div className="gb-head">
+          <span className="gb-col-student">student</span>
+          <span className="gb-col-mastery">mastery</span>
+          <span className="gb-col-skill">comm</span>
+          <span className="gb-col-skill">clarity</span>
+          <span className="gb-col-skill">conf</span>
+          <span className="gb-col-streak">streak</span>
+          <span className="gb-col-chev" />
+        </div>
+        {model.students.map(s => {
+          const open = openStudent === s.id;
+          return (
+            <div key={s.id} className={`gb-row-wrap ${open ? "open" : ""}`}>
+              <button className="gb-row" onClick={() => setOpenStudent(open ? null : s.id)}>
+                <span className="gb-col-student">
+                  <span className="gb-avatar">{initials(s.id)}</span>
+                  <span className="gb-name">{fullName(s.id)}</span>
+                </span>
+                <span className="gb-col-mastery">
+                  <span className="gb-meter"><span className="gb-meter-fill" style={{ width: `${s.pct}%` }} /></span>
+                  <span className="gb-pct">{s.pct}%</span>
+                </span>
+                <span className="gb-col-skill">{s.skills?.communication ?? "–"}</span>
+                <span className="gb-col-skill">{s.skills?.clarity ?? "–"}</span>
+                <span className="gb-col-skill">{s.skills?.confidence ?? "–"}</span>
+                <span className="gb-col-streak">
+                  {s.streak > 0 ? <><IconFlame size={13} className="gb-flame" /> {s.streak}d</> : <span className="gb-dim">—</span>}
+                </span>
+                <IconChevron size={16} className="gb-col-chev gb-chevron" />
+              </button>
+              {open && (
+                <div className="gb-detail">
+                  <div className="gb-concepts">
+                    {s.entries.map(e => {
+                      const mids = Object.keys(e.misconceptions).sort();
+                      const done = mids.filter(m => e.misconceptions[m] === "resolved").length;
+                      return (
+                        <div key={e.pack_id} className="gb-concept">
+                          <span className="gb-concept-title">{e.pack_title || e.pack_id}</span>
+                          <span className="gb-dots">
+                            {mids.map(m => <span key={m} className={`gb-dot ${e.misconceptions[m] === "resolved" ? "ok" : "bad"}`} title={beliefOf(e.pack_id, m)} />)}
+                          </span>
+                          <span className="gb-dim">{done}/{mids.length} resolved</span>
+                          {e.report && (
+                            <button className="link-btn gb-report" onClick={() => onViewReport(e.reportSession)}>read report</button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {s.quote && (
+                    <p className="gb-quote"><IconQuote size={13} /> “{s.quote.length > 180 ? s.quote.slice(0, 178) + "…" : s.quote}”</p>
+                  )}
+                  <p className="gb-meta-line">
+                    {s.sessionCount} session{s.sessionCount === 1 ? "" : "s"} · {s.solved}/{s.total} confusions resolved
+                    {s.skills && s.skills.confidence < 45 && <span className="gb-flag"> · hedges a lot — needs a confidence win</span>}
+                    {s.skills && s.skills.communication < 45 && <span className="gb-flag"> · very short answers — ask them to explain with a picture</span>}
+                    {s.skills && s.skills.clarity < 45 && s.skills.communication >= 45 && <span className="gb-flag"> · talks plenty but resolves little — push for the why, not the story</span>}
+                  </p>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="viz-grid">
+        <section className="viz-card prize">
+          <h4 className="viz-title"><IconTrophy size={15} /> Best explanation this week</h4>
           {model.best ? (
             <>
-              <p className="prize-quote"><IconQuote size={14} /> {model.best.quote.length > 150 ? model.best.quote.slice(0, 148) + "…" : model.best.quote}</p>
+              <p className="prize-quote"><IconQuote size={14} /> {model.best.quote.length > 170 ? model.best.quote.slice(0, 168) + "…" : model.best.quote}</p>
               <p className="prize-by">— {firstName(model.best.learner_id)}, teaching {model.best.pack_title}</p>
             </>
           ) : <p className="home-hint">Awarded to the clearest verbatim explanation of the week.</p>}
         </section>
-        <section className="viz-card mini companion">
+        <section className="viz-card companion">
           <h4 className="viz-title"><IconSparkle size={15} /> Class companion</h4>
           {!coach && (
             <>
@@ -201,7 +304,7 @@ export default function ClassInsights({ onViewReport }) {
       <h4 className="viz-title concepts-title">Concepts — open one to see exactly what to fix</h4>
       {model.list.map(c => {
         const open = openConcept === c.pack_id;
-        const reteachRows = c.mids.filter(mid => c.students.some(s => s.misconceptions[mid] !== "resolved"));
+        const reteachRows = c.mids.filter(mid => c.students.some(s => s.misconceptions[mid] && s.misconceptions[mid] !== "resolved"));
         return (
           <section key={c.pack_id} className={`insight-card accordion ${open ? "open" : ""}`}>
             <button className="accordion-head" onClick={() => setOpenConcept(open ? null : c.pack_id)}>
@@ -219,8 +322,9 @@ export default function ClassInsights({ onViewReport }) {
             {open && (
               <div className="accordion-body">
                 {c.mids.map(mid => {
-                  const clear = c.students.every(s => s.misconceptions[mid] === "resolved");
-                  const withQuote = c.students.find(s => s.misconceptions[mid] === "resolved" && s.evidence[mid]);
+                  const holders = c.students.filter(s => s.misconceptions[mid]);
+                  const clear = holders.every(s => s.misconceptions[mid] === "resolved");
+                  const withQuote = holders.find(s => s.misconceptions[mid] === "resolved" && s.evidence[mid]);
                   return (
                     <div key={mid} className={`insight-row ${clear ? "clear" : "needs-work"}`}>
                       <span className={`insight-dot ${clear ? "ok" : "bad"}`} />
@@ -229,7 +333,7 @@ export default function ClassInsights({ onViewReport }) {
                         {withQuote && clear && <p className="insight-quote">“{withQuote.evidence[mid]}” — {firstName(withQuote.learner_id)}</p>}
                       </div>
                       <div className="insight-chips">
-                        {c.students.map(s => {
+                        {holders.map(s => {
                           const ok = s.misconceptions[mid] === "resolved";
                           return (
                             <span key={s.learner_id} className={`student-chip ${ok ? "ok" : "not"}`}
@@ -258,16 +362,6 @@ export default function ClassInsights({ onViewReport }) {
                     );
                   })}
                 </div>
-
-                {c.students.some(s => s.report) && (
-                  <div className="insight-reports">
-                    {c.students.filter(s => s.report).map(s => (
-                      <button key={s.learner_id} className="chapter-chip" onClick={() => onViewReport(s.reportSession)}>
-                        <IconFolder size={13} /> {firstName(s.learner_id)}'s full report
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
             )}
           </section>

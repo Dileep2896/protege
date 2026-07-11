@@ -74,5 +74,32 @@
       "note_for_builders": "Hooks: sessions include staff LOGGING notes; W5 absence; W6 re-assessment due for parent update + IEP progress note drawing on the whole history.",
       "seeded_sessions": []
     }
+  ],
+  "classmates": [
+    {
+      "id": "ava_patel",
+      "name": "Ava Patel",
+      "notes": "explains with stories; the class star"
+    },
+    {
+      "id": "marcus_lee",
+      "name": "Marcus Lee",
+      "notes": "knows more than he trusts himself to say"
+    },
+    {
+      "id": "priya_sharma",
+      "name": "Priya Sharma",
+      "notes": "answers in bullet points; warming up"
+    },
+    {
+      "id": "jake_turner",
+      "name": "Jake Turner",
+      "notes": "talks a lot, lands the point sometimes"
+    },
+    {
+      "id": "emma_rossi",
+      "name": "Emma Rossi",
+      "notes": "steady, thorough, quietly consistent"
+    }
   ]
 }

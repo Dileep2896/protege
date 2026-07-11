@@ -2129,3 +2129,136 @@ body {
   width: 100%; height: 130px; object-fit: cover;
   border: 1.5px solid var(--ink); border-radius: 10px; display: block;
 }
+
+/* ── Insights v4: ledger + gradebook (overrides the boxy v3 look) ────────── */
+.ledger {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1.5px solid var(--ink);
+  border-bottom: 1.5px solid var(--ink);
+  margin: 14px 0 22px;
+}
+.ledger-stat {
+  padding: 18px 20px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ledger-stat + .ledger-stat { border-left: 1px dashed color-mix(in srgb, var(--ink) 25%, transparent); }
+.ledger-num {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 700;
+  font-size: 2.7rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.ledger-label {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--ink) 62%, transparent);
+}
+.ledger-label svg { color: var(--ballpoint); }
+.ledger-stat.alert .ledger-num { color: var(--red-pencil); }
+.ledger-stat.alert .ledger-label svg { color: var(--red-pencil); }
+
+/* calmer cards: hairline instead of ink-heavy border + shadow */
+.insights .viz-card {
+  border: 1px solid color-mix(in srgb, var(--ink) 20%, transparent);
+  border-radius: 10px;
+  box-shadow: none;
+  background: color-mix(in srgb, #fff 45%, var(--paper));
+  padding: 18px 20px;
+}
+.insights .insight-card.accordion {
+  border: 1px solid color-mix(in srgb, var(--ink) 20%, transparent);
+  box-shadow: none;
+  background: color-mix(in srgb, #fff 45%, var(--paper));
+}
+.viz-foot {
+  margin: 12px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--ink) 55%, transparent);
+  border-top: 1px dashed color-mix(in srgb, var(--ink) 20%, transparent);
+  padding-top: 10px;
+}
+.roster-title { margin-top: 26px; }
+
+/* gradebook roster */
+.gradebook {
+  border: 1px solid color-mix(in srgb, var(--ink) 20%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, #fff 45%, var(--paper));
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+.gb-head, .gb-row {
+  display: grid;
+  grid-template-columns: 2.4fr 1.8fr 0.55fr 0.55fr 0.55fr 0.8fr 30px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+}
+.gb-head {
+  font-size: 0.68rem; letter-spacing: 0.09em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--ink) 55%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 20%, transparent);
+  padding-block: 8px;
+}
+.gb-row {
+  width: 100%; text-align: left; background: none; border: none; cursor: pointer;
+  font: inherit; color: inherit;
+  border-bottom: 1px dashed color-mix(in srgb, var(--ink) 14%, transparent);
+  transition: background 0.15s;
+}
+.gb-row-wrap:last-child .gb-row { border-bottom: none; }
+.gb-row:hover { background: color-mix(in srgb, var(--highlighter) 16%, transparent); }
+.gb-col-student { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
+.gb-avatar {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  border: 1.5px solid var(--ballpoint); color: var(--ballpoint);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 0.72rem;
+}
+.gb-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gb-col-mastery { display: inline-flex; align-items: center; gap: 8px; }
+.gb-meter {
+  flex: 1; height: 8px; border-radius: 5px;
+  border: 1px solid color-mix(in srgb, var(--ink) 30%, transparent);
+  background: var(--paper); overflow: hidden;
+}
+.gb-meter-fill { display: block; height: 100%; background: var(--ballpoint); border-radius: 4px; transition: width 0.5s ease; }
+.gb-pct { font-variant-numeric: tabular-nums; font-size: 0.82rem; width: 38px; text-align: right; }
+.gb-col-skill { font-variant-numeric: tabular-nums; font-size: 0.85rem; text-align: center; }
+.gb-col-streak { display: inline-flex; align-items: center; gap: 4px; font-size: 0.85rem; }
+.gb-flame { color: var(--red-pencil); }
+.gb-dim { color: color-mix(in srgb, var(--ink) 40%, transparent); }
+.gb-chevron { transition: transform 0.2s; color: color-mix(in srgb, var(--ink) 55%, transparent); }
+.gb-row-wrap.open .gb-chevron { transform: rotate(180deg); }
+.gb-detail {
+  padding: 14px 18px 16px 56px;
+  border-bottom: 1px dashed color-mix(in srgb, var(--ink) 14%, transparent);
+  border-left: 3px solid var(--ballpoint);
+  animation: acc-open 0.22s ease;
+}
+.gb-concept { display: flex; align-items: center; gap: 10px; padding: 4px 0; flex-wrap: wrap; }
+.gb-concept-title { font-weight: 600; font-size: 0.9rem; }
+.gb-dots { display: inline-flex; gap: 4px; }
+.gb-dot { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid; }
+.gb-dot.ok { border-color: var(--ballpoint); background: var(--ballpoint); }
+.gb-dot.bad { border-color: var(--red-pencil); background: transparent; }
+.gb-report { font-size: 0.8rem; }
+.gb-quote {
+  font-family: "Caveat", cursive; font-size: 1.12rem; color: var(--ballpoint);
+  margin: 10px 0 4px; line-height: 1.35;
+}
+.gb-quote svg { color: var(--highlighter); vertical-align: -2px; }
+.gb-meta-line { margin: 4px 0 0; font-size: 0.8rem; color: color-mix(in srgb, var(--ink) 60%, transparent); }
+.gb-flag { color: var(--red-pencil); }
+
+@media (max-width: 760px) {
+  .gb-head, .gb-row { grid-template-columns: 2fr 1.6fr 0.9fr 30px; }
+  .gb-head .gb-col-skill, .gb-row > .gb-col-skill { display: none; }
+  .ledger { grid-template-columns: repeat(2, 1fr); }
+  .gb-detail { padding-left: 18px; }
+}

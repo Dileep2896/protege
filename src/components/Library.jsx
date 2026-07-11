@@ -74,12 +74,18 @@ export default function Library({ role, onOpenChapter, onResume, onViewReport, l
             : <span className="book-cover-blank"><IconBook size={28} /></span>}
         </span>
         <span className="book-title">{c.title}</span>
-        <span className="book-meta">{m ? `${m.mastered}/${m.total} taught` : c.source}</span>
-        {m && m.total > 0 && (
-          <span className="book-progress">
-            <span className="book-progress-fill" style={{ width: `${(m.mastered / m.total) * 100}%` }} />
-          </span>
-        )}
+        {role === "teacher"
+          ? <span className="book-meta">{m ? `${m.total} topic${m.total === 1 ? "" : "s"} — insights above track the class` : c.source}</span>
+          : (
+            <>
+              <span className="book-meta">{m ? `${m.mastered}/${m.total} taught` : c.source}</span>
+              {m && m.total > 0 && (
+                <span className="book-progress">
+                  <span className="book-progress-fill" style={{ width: `${(m.mastered / m.total) * 100}%` }} />
+                </span>
+              )}
+            </>
+          )}
       </button>
     );
   };
