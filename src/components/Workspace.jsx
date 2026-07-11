@@ -1,0 +1,514 @@
+// Workspace — a course opened from the bookshelf. Left sidebar navigates the
+// course's features; the top-level role toggle (student/teacher) changes defaults
+// and which panels lead. Learning happens on flip-cards; teaching launches Milo
+// or the class of three.
+import { useEffect, useRef, useState } from "react";
+import PathGraph from "./PathGraph.jsx";
+import { ConfirmModal, NoticeModal } from "./Modal.jsx";
+import {
+  chapterTopics, illustrateTopic, packForTopic, addTopic, extendCourse,
+  reelStart, reelPoll, topicVideo, applicationsFor, setTopicWeek,
+  listSessions, deleteSession
+} from "../lib/backend.js";
+import learnersSeed from "../../packs/learners.json";
+import personas from "../../packs/personas.json";
+
+const NAV = [
+  { id: "learn", icon: "📚", label: "Learn" },
+  { id: "path", icon: "🗺", label: "Path" },
+  { id: "teach", icon: "🎓", label: "Teach" },
+  { id: "sessions", icon: "🗂", label: "Sessions & reports" },
+  { id: "add", icon: "➕", label: "Grow course" }
+];
+
+// Chrome won't reliably play multi-MB data-URI videos — hand it a Blob URL instead.
+function toBlobUrl(dataUri) {
+  const comma = dataUri.indexOf(",");
+  const mime = dataUri.slice(5, dataUri.indexOf(";"));
+  const bin = atob(dataUri.slice(comma + 1));
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return URL.createObjectURL(new Blob([bytes], { type: mime }));
+}
+
+function ReelMain({ topic, index, onTeach, teachBusy, role }) {
+  const [videoSrc, setVideoSrc] = useState(null);
+  const [genState, setGenState] = useState("idle");   // idle | generating | failed
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    // videos are heavy, fetched lazily per slide
+    let url = null;
+    topicVideo(topic.id)
+      .then(v => { if (v) { url = toBlobUrl(v); setVideoSrc(url); } setChecked(true); })
+      .catch(() => setChecked(true));
+    return () => { if (url) URL.revokeObjectURL(url); };
+  }, [topic.id]);
+
+  async function generate() {
+    if (genState === "generating") return;
+    setGenState("generating");
+    try {
+      const start = await reelStart(topic.id);
+      if (start.cached) {
+        const v = await topicVideo(topic.id);
+        if (v) setVideoSrc(toBlobUrl(v));
+        return;
+      }
+      for (let i = 0; i < 40; i++) {
+        await new Promise(r => setTimeout(r, 9000));
+        const st = await reelPoll(topic.id, start.job_id);
+        if (st.status === "completed") {
+          const v = await topicVideo(topic.id);
+          if (v) setVideoSrc(toBlobUrl(v));
+          return;
+        }
+        if (st.status === "failed") { setGenState("failed"); return; }
+      }
+      setGenState("failed");
+    } catch {
+      setGenState("failed");
+    }
+  }
+
+  return (
+    <>
+      {videoSrc ? (
+        <video src={videoSrc} autoPlay loop muted playsInline />
+      ) : (
+        <div className="reel-placeholder" style={topic.image ? { backgroundImage: `url(${topic.image})` } : {}}>
+          {checked && (
+            <button className="reel-gen" onClick={generate} disabled={genState === "generating"}>
+              {genState === "generating" ? "🎬 filming… ~2 min" : genState === "failed" ? "try again 🎬" : "🎬 Make it a video (~$1)"}
+            </button>
+          )}
+        </div>
+      )}
+      <div className="reel-caption">
+        <span className="reel-num">topic {String(index + 1).padStart(2, "0")}{topic.mastered ? " · taught ✓" : ""}{(topic.applications || []).length ? " · real-world uses below ↓" : ""}</span>
+        <h4>{topic.title}</h4>
+        <p>{topic.key_idea}</p>
+        <button className="teach-btn" onClick={() => onTeach(topic)} disabled={!!teachBusy}>
+          {teachBusy === topic.id ? "…" : role === "teacher" ? "Preview lesson" : "Now teach it"}
+        </button>
+      </div>
+    </>
+  );
+}
+
+// A "where you'll actually meet this" slide — the real-world application reel.
+// Renders INSIDE a .reel-phone provided by the feed.
+function AppSlide({ topic, app, appIndex }) {
+  return (
+    <>
+      <div className="reel-app-bg" style={topic.image ? { backgroundImage: `url(${topic.image})` } : {}} />
+      <div className="reel-app">
+        <span className="reel-app-emoji">{app.emoji}</span>
+        <span className="reel-app-kicker">in the real world · {appIndex + 1}/{(topic.applications || []).length}</span>
+        <h4>{app.where}</h4>
+        <p>{app.how}</p>
+      </div>
+      <div className="reel-caption reel-caption-slim">
+        <span className="reel-num">{topic.title}</span>
+      </div>
+    </>
+  );
+}
+
+function FlipCard({ topic, index, onTeach, teachBusy, role }) {
+  const [flipped, setFlipped] = useState(false);
+  return (
+    <div className={`flip-card ${flipped ? "flipped" : ""} ${topic.mastered ? "mastered" : ""}`}>
+      <div className="flip-inner">
+        <button className="flip-face flip-front" onClick={() => setFlipped(true)}>
+          {topic.scheduled_week && (
+            <span className={`week-badge ${topic.dueNow ? "due" : ""}`}>
+              {topic.dueNow ? "📌 this week's homework" : `📅 week ${topic.scheduled_week}`}
+            </span>
+          )}
+          <span className="topic-art">
+            {topic.image
+              ? <img src={topic.image} alt="" loading="lazy" />
+              : <span className="topic-art-loading"><span className="dot" /><span className="dot" /><span className="dot" /> sketching…</span>}
+            {topic.mastered && <span className="mastered-stamp">taught ✓</span>}
+          </span>
+          <span className="flip-front-body">
+            <span className="topic-num">{String(index + 1).padStart(2, "0")}</span>
+            <span className="flip-title">{topic.title}</span>
+            <span className="topic-key">{topic.key_idea}</span>
+            <span className="flip-hint">tap to open ↻</span>
+          </span>
+        </button>
+        <div className="flip-face flip-back">
+          <h4>{topic.title}</h4>
+          <p className="flip-explanation">{topic.explanation}</p>
+          <div className="flip-actions">
+            <button className="teach-btn" onClick={() => onTeach(topic)} disabled={!!teachBusy}>
+              {teachBusy === topic.id ? "Preparing your protégé…" : role === "teacher" ? "Preview lesson" : topic.mastered ? "Teach it again" : "Now teach it"}
+            </button>
+            <button className="link-btn" onClick={() => setFlipped(false)}>flip back ↻</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function Workspace({ chapter, role, packs, onStartSession, onResume, onViewReport, onBack }) {
+  const [tab, setTab] = useState("learn");
+  const [learnView, setLearnView] = useState("cards");   // cards | reels
+  const [topics, setTopics] = useState(null);
+  const [teachBusy, setTeachBusy] = useState(null);
+  const [error, setError] = useState(null);
+  const [sessions, setSessions] = useState(null);
+  const [newTopic, setNewTopic] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [learnerId, setLearnerId] = useState(learnersSeed.demo_learner_id);
+  const [level, setLevel] = useState(personas.default);
+  const [confirmDelete, setConfirmDelete] = useState(null);   // session row pending delete
+  const [notice, setNotice] = useState(null);
+  const [growText, setGrowText] = useState("");
+  const [growing, setGrowing] = useState(false);
+  const illustrating = useRef(false);
+
+  // Current course week from its creation date; topics scheduled for it are "due now".
+  const currentWeek = chapter.created_at
+    ? Math.floor((Date.now() - new Date(chapter.created_at).getTime()) / 604800000) + 1
+    : 1;
+
+  async function loadTopics() {
+    const raw = await chapterTopics(chapter.id);
+    const ts = raw.map(t => ({ ...t, dueNow: !t.mastered && t.scheduled_week === currentWeek }));
+    setTopics(ts);
+    if (illustrating.current) return;
+    illustrating.current = true;
+    for (const t of ts.filter(t => !t.image)) {
+      try {
+        const { image } = await illustrateTopic(t.id);
+        setTopics(prev => prev?.map(x => x.id === t.id ? { ...x, image } : x));
+      } catch (err) { console.warn("[milo] illustrate failed:", err.message); }
+    }
+    illustrating.current = false;
+  }
+
+  useEffect(() => { loadTopics().catch(err => setError(err.message)); }, [chapter.id]);   // eslint-disable-line
+  useEffect(() => {
+    if (tab === "sessions") listSessions().then(setSessions).catch(() => setSessions([]));
+  }, [tab]);
+
+  // Reels: make sure every topic has its real-world application slides (cheap LLM text).
+  useEffect(() => {
+    if (learnView !== "reels" || !topics) return;
+    let cancelled = false;
+    (async () => {
+      for (const t of topics.filter(t => !t.applications)) {
+        try {
+          const { applications } = await applicationsFor(t.id);
+          if (cancelled) return;
+          setTopics(prev => prev?.map(x => x.id === t.id ? { ...x, applications } : x));
+        } catch { /* slide simply doesn't render */ }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [learnView, topics === null]);   // eslint-disable-line
+
+  async function teach(topic) {
+    if (teachBusy) return;
+    setTeachBusy(topic.id);
+    setError(null);
+    try {
+      const { pack } = await packForTopic(topic.id);
+      onStartSession({ packObj: pack, learnerId, level, startInCall: true });
+    } catch (err) {
+      setError(`Couldn't build the lesson: ${err.message}`);
+    } finally {
+      setTeachBusy(null);
+    }
+  }
+
+  async function submitGrow() {
+    const text = growText.trim();
+    if (!text || growing) return;
+    setGrowing(true);
+    setError(null);
+    try {
+      const res = await extendCourse(chapter.id, text);
+      setGrowText("");
+      illustrating.current = false;
+      await loadTopics();
+      setNotice(`Added ${res.added} topic${res.added === 1 ? "" : "s"}: ${res.topics.join(", ")}`);
+      setTab("learn");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setGrowing(false);
+    }
+  }
+
+  function onGrowFile(e) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    f.text().then(t => setGrowText(t.slice(0, 24000)));
+  }
+
+  async function submitTopic() {
+    const t = newTopic.trim();
+    if (!t || adding) return;
+    setAdding(true);
+    setError(null);
+    try {
+      await addTopic(chapter.id, t);
+      setNewTopic("");
+      illustrating.current = false;
+      await loadTopics();
+      setTab("learn");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setAdding(false);
+    }
+  }
+
+  async function removeSession(s) {
+    setConfirmDelete(null);
+    try {
+      await deleteSession(s.id);
+      setSessions(prev => prev.filter(x => x.id !== s.id));
+    } catch (err) { setNotice(`Delete failed: ${err.message}`); }
+  }
+
+  const learnerName = id => learnersSeed.learners.find(l => l.id === id)?.name || id;
+  const agentFirst = learnerName(learnerId).split(" ")[0];
+  const mastered = topics?.filter(t => t.mastered).length || 0;
+
+  return (
+    <div className="workspace">
+      <aside className="side-nav">
+        <button className="side-back" onClick={onBack}>← Bookshelf</button>
+        <div className="side-course">
+          <h3>{chapter.title}</h3>
+          {topics && (
+            <div className="course-progress">
+              <span className="book-progress"><span className="book-progress-fill" style={{ width: `${topics.length ? (mastered / topics.length) * 100 : 0}%` }} /></span>
+              <span className="course-progress-label">{mastered}/{topics?.length || 0} taught</span>
+            </div>
+          )}
+        </div>
+        <nav>
+          {NAV.filter(n => n.id !== "add" || role === "teacher").map(n => (
+            <button key={n.id} className={`side-item ${tab === n.id ? "active" : ""}`} onClick={() => setTab(n.id)}>
+              <span className="side-icon">{n.icon}</span> {n.label}
+            </button>
+          ))}
+        </nav>
+        <p className="side-foot">{role === "teacher" ? "Teacher view — your evidence lives in Class insights" : "Student view — learn it, then teach your protégé"}</p>
+      </aside>
+
+      <section className="work-pane">
+        {error && <p className="drawpad-error">{error}</p>}
+
+        {tab === "learn" && (
+          <>
+            <div className="learn-head">
+              <div>
+                <h2 className="work-title">Learn {chapter.title}</h2>
+                <p className="home-hint">
+                  {learnView === "cards"
+                    ? "Flip a card to read it. When it makes sense, prove it — teach it."
+                    : "Scroll like a feed. Each topic is a short concept clip."}
+                </p>
+              </div>
+              <div className="role-toggle learn-toggle">
+                <button className={learnView === "cards" ? "active" : ""} onClick={() => setLearnView("cards")}>🃏 Cards</button>
+                <button className={learnView === "reels" ? "active" : ""} onClick={() => setLearnView("reels")}>🎬 Reels</button>
+              </div>
+            </div>
+            {!topics && <p className="home-hint">Opening…</p>}
+            {learnView === "cards" && (
+              <div className="cards-grid">
+                {topics?.map((t, i) => (
+                  <FlipCard key={t.id} topic={t} index={i} onTeach={teach} teachBusy={teachBusy} role={role} />
+                ))}
+              </div>
+            )}
+            {learnView === "reels" && topics && (() => {
+              const slides = topics.flatMap((t, i) => [
+                { kind: "main", t, i },
+                ...(t.applications || []).map((a, j) => ({ kind: "app", t, a, j }))
+              ]);
+              return (
+                <div className="reel-feed">
+                  {slides.map((s, n) => (
+                    <div className="reel-slide" key={s.kind === "main" ? s.t.id : `${s.t.id}-app${s.j}`}>
+                      <div className="reel-phone">
+                        <span className="reel-counter">{n + 1} / {slides.length}</span>
+                        {s.kind === "main"
+                          ? <ReelMain topic={s.t} index={s.i} onTeach={teach} teachBusy={teachBusy} role={role} />
+                          : <AppSlide topic={s.t} app={s.a} appIndex={s.j} />}
+                        {n === 0 && slides.length > 1 && (
+                          <span className="swipe-hint">swipe ↓</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </>
+        )}
+
+        {tab === "path" && topics && (
+          <>
+            <h2 className="work-title">Learning path</h2>
+            <p className="home-hint">Arrows show what unlocks what. Teach a topic to strike it through.</p>
+            <PathGraph topics={topics} />
+          </>
+        )}
+
+        {tab === "teach" && (
+          <>
+            <h2 className="work-title">{role === "teacher" ? "Preview what your students get" : `Teach it to ${agentFirst}`}</h2>
+            {role === "teacher" && (
+              <p className="home-hint">Each topic becomes a Milo who's confused about exactly that. Your students teach him — you get the evidence in Class insights. Preview any lesson below.</p>
+            )}
+            <div className="teach-config">
+              <label><span>Your protégé</span>
+                <select value={learnerId} onChange={e => setLearnerId(e.target.value)}>
+                  {learnersSeed.learners.map(l => <option key={l.id} value={l.id}>{l.name} · {l.grade}</option>)}
+                </select>
+              </label>
+              <p className="teach-note">Sessions open as a live call — talk, write, or open the chat.</p>
+            </div>
+            <ul className="teach-list">
+              {topics?.map((t, i) => (
+                <li key={t.id}>
+                  <span className={`teach-status ${t.mastered ? "done" : ""}`}>{t.mastered ? "✓" : String(i + 1).padStart(2, "0")}</span>
+                  <span className="teach-topic">{t.title}</span>
+                  <button className="teach-btn" onClick={() => teach(t)} disabled={!!teachBusy}>
+                    {teachBusy === t.id ? "…" : role === "teacher" ? "Preview" : `Teach ${agentFirst}`}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <h3 className="work-sub">Classic units</h3>
+            <ul className="teach-list">
+              {packs.map(p => (
+                <li key={p.id}>
+                  <span className="teach-status">★</span>
+                  <span className="teach-topic">{p.title}</span>
+                  <button className="teach-btn" onClick={() => onStartSession({ packId: p.id, learnerId, level, startInCall: true })}>
+                    {role === "teacher" ? "Preview" : `Teach ${agentFirst}`}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+
+        {tab === "sessions" && (
+          <>
+            <h2 className="work-title">Sessions & reports</h2>
+            {sessions === null && <p className="home-hint">Loading…</p>}
+            {sessions?.length === 0 && <p className="home-hint">No sessions yet.</p>}
+            {sessions?.length > 0 && (
+              <table className="session-table">
+                <thead><tr><th>When</th><th>Student</th><th>Concept</th><th>Progress</th><th></th></tr></thead>
+                <tbody>
+                  {sessions.map(s => {
+                    const res = Object.values(s.state?.misconceptions || {}).filter(v => v === "resolved").length;
+                    const tot = Object.keys(s.state?.misconceptions || {}).length;
+                    return (
+                      <tr key={s.id}>
+                        <td>{new Date(s.updated_at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
+                        <td>{learnerName(s.learner_id)}</td>
+                        <td>{s.pack_title || s.pack_id}</td>
+                        <td><span className={res === tot && tot > 0 ? "prog done" : "prog"}>{res}/{tot}</span></td>
+                        <td className="row-actions">
+                          <button onClick={() => onResume(s)}>Open</button>
+                          {s.report && <button onClick={() => onViewReport(s)}>Report</button>}
+                          <button className="danger" onClick={() => setConfirmDelete(s)}>Delete</button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </>
+        )}
+
+        {confirmDelete && (
+          <ConfirmModal
+            title="Delete this session?"
+            message={`${learnerName(confirmDelete.learner_id)} · ${confirmDelete.pack_title || confirmDelete.pack_id} — the transcript and its report go with it.`}
+            onConfirm={() => removeSession(confirmDelete)}
+            onCancel={() => setConfirmDelete(null)}
+          />
+        )}
+        {notice && <NoticeModal title="Hmm." message={notice} onClose={() => setNotice(null)} />}
+
+        {tab === "add" && (
+          <>
+            <h2 className="work-title">Grow this course</h2>
+            <p className="home-hint">Name a single missing topic — it gets written, illustrated, and wired into the learning path.</p>
+            <div className="learn-row">
+              <input
+                className="learn-input"
+                value={newTopic}
+                onChange={e => setNewTopic(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && submitTopic()}
+                placeholder="e.g. Groundwater and aquifers"
+                disabled={adding}
+              />
+              <button className="start-btn" onClick={submitTopic} disabled={adding || !newTopic.trim()}>
+                {adding ? "Writing it…" : "Add topic"}
+              </button>
+            </div>
+
+            <h3 className="work-sub">…or feed it a whole new chapter</h3>
+            <p className="home-hint">Paste the next chapter of the textbook (or upload a .txt) — it becomes 2–4 new topics connected to the ones you already have.</p>
+            <textarea
+              className="learn-paste"
+              value={growText}
+              onChange={e => setGrowText(e.target.value)}
+              placeholder="Paste the new chapter's text here…"
+              rows={6}
+              disabled={growing}
+            />
+            <div className="start-actions" style={{ marginTop: 10 }}>
+              <button className="start-btn" onClick={submitGrow} disabled={growing || !growText.trim()}>
+                {growing ? "Reading the chapter… ~1 min" : "Grow the course"}
+              </button>
+              <label className="link-btn file-btn">
+                upload .txt
+                <input type="file" accept=".txt,.md,text/plain" onChange={onGrowFile} hidden />
+              </label>
+            </div>
+
+            <h3 className="work-sub">📅 Timeline — when is each topic taught?</h3>
+            <p className="home-hint">Set the week for each topic. Students see that week's topics flagged as homework: learn it, then teach their protégé.</p>
+            <ul className="teach-list">
+              {topics?.map((t, i) => (
+                <li key={t.id}>
+                  <span className={`teach-status ${t.mastered ? "done" : ""}`}>{t.mastered ? "✓" : String(i + 1).padStart(2, "0")}</span>
+                  <span className="teach-topic">{t.title}</span>
+                  <select
+                    value={t.scheduled_week || ""}
+                    onChange={e => {
+                      const wk = e.target.value ? Number(e.target.value) : null;
+                      setTopics(prev => prev.map(x => x.id === t.id ? { ...x, scheduled_week: wk } : x));
+                      setTopicWeek(t.id, wk).catch(() => {});
+                    }}
+                  >
+                    <option value="">unscheduled</option>
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map(w => <option key={w} value={w}>week {w}</option>)}
+                  </select>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </section>
+    </div>
+  );
+}
