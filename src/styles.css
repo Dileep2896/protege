@@ -2624,3 +2624,27 @@ body {
   cursor: pointer;
 }
 .reel-sound:hover { background: rgba(34, 37, 42, 0.85); }
+
+/* narrated reels: ken-burns drift while the application is read aloud */
+.reel-app-bg.kb { animation: kenburns 24s ease-in-out infinite alternate; }
+@keyframes kenburns {
+  from { transform: scale(1) translate(0, 0); }
+  to { transform: scale(1.18) translate(-3%, -4%); }
+}
+.reel-narrate {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-top: 14px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 999px;
+  background: var(--highlighter);
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
+}
+.reel-narrate:hover { transform: translateY(-1px); }

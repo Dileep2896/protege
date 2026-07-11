@@ -12,7 +12,8 @@ import {
 } from "../lib/backend.js";
 import learnersSeed from "../../packs/learners.json";
 import personas from "../../packs/personas.json";
-import { IconBook, IconMap, IconCap, IconFolder, IconPlus, IconCalendar, IconPin, IconCards, IconFilm, IconVideo, IconSpeaker, IconSpeakerOff } from "./Icons.jsx";
+import { IconBook, IconMap, IconCap, IconFolder, IconPlus, IconCalendar, IconPin, IconCards, IconFilm, IconVideo, IconSpeaker, IconSpeakerOff, IconPlay } from "./Icons.jsx";
+import { speak, stopSpeaking } from "../lib/voice.js";
 import Loader from "./Loader.jsx";
 
 const NAV = [
@@ -105,16 +106,26 @@ function ReelMain({ topic, index, onTeach, teachBusy, role }) {
 }
 
 // A "where you'll actually meet this" slide — the real-world application reel.
-// Renders INSIDE a .reel-phone provided by the feed.
+// Renders INSIDE a .reel-phone provided by the feed. Play = Ken Burns motion
+// over the illustration while the application is narrated aloud (TTS).
 function AppSlide({ topic, app, appIndex }) {
+  const [playing, setPlaying] = useState(false);
+  async function narrate() {
+    if (playing) { stopSpeaking(); setPlaying(false); return; }
+    setPlaying(true);
+    try { await speak(`${app.where}. ${app.how}`, { voice: "coral" }); } catch { /* stays visual */ }
+    setPlaying(false);
+  }
   return (
     <>
-      <div className="reel-app-bg" style={topic.image ? { backgroundImage: `url(${topic.image})` } : {}} />
+      <div className={`reel-app-bg ${playing ? "kb" : ""}`} style={topic.image ? { backgroundImage: `url(${topic.image})` } : {}} />
       <div className="reel-app">
-        <span className="reel-app-emoji">{app.emoji}</span>
         <span className="reel-app-kicker">in the real world · {appIndex + 1}/{(topic.applications || []).length}</span>
         <h4>{app.where}</h4>
         <p>{app.how}</p>
+        <button className="reel-narrate" onClick={narrate}>
+          {playing ? <><IconSpeaker size={14} /> playing — tap to stop</> : <><IconPlay size={14} /> play this reel</>}
+        </button>
       </div>
       <div className="reel-caption reel-caption-slim">
         <span className="reel-num">{topic.title}</span>
