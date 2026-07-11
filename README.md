@@ -163,7 +163,7 @@ erDiagram
     CHAPTERS {
         uuid id PK
         text title
-        text source "pasted workbook | internet"
+        text source "pasted workbook / internet"
         text grade_band
     }
     TOPICS {
@@ -187,7 +187,7 @@ erDiagram
         text pack_id
         jsonb state "phase + misconception map"
         jsonb messages "turns[]"
-        jsonb evidence "mid -> verbatim quote"
+        jsonb evidence "mid to verbatim quote"
         text report "teaching report markdown"
     }
 ```
