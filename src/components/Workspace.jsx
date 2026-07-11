@@ -172,6 +172,7 @@ function TopicDeck({ topic, index, role, onTeach, teachBusy, onClose }) {
           {c.kind === "cover" && (
             <>
               {topic.image && <img className="deck-art" src={topic.image} alt="" />}
+              {topic.image && <span className="deck-art-caption">hold this picture in your head — it's the idea, drawn</span>}
               <span className="topic-num">topic {String(index + 1).padStart(2, "0")}</span>
               <h3 className="deck-title">{topic.title}</h3>
               <p className="deck-key">{topic.key_idea}</p>
@@ -188,6 +189,12 @@ function TopicDeck({ topic, index, role, onTeach, teachBusy, onClose }) {
             <>
               <span className="deck-kicker">that's the whole idea</span>
               <h3 className="deck-title">Think you've got it?</h3>
+              {topic.image && (
+                <span className="deck-finale-art">
+                  <img src={topic.image} alt="" />
+                  <span className="deck-art-caption">borrow this picture — describing what's happening in it IS the explanation</span>
+                </span>
+              )}
               <p className="deck-key">Reading isn't proof — teaching is. {role === "teacher" ? "Preview the lesson your students get." : "Explain it until it clicks for them."}</p>
               <button
                 className="hero-cta deck-teach"
