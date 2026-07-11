@@ -7,7 +7,7 @@ import { readFileSync } from "fs";
 
 const env = Object.fromEntries(readFileSync(".env", "utf8").split("\n").filter(l => l.includes("=")).map(l => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1).trim()]));
 const KEY = env.BUTTERBASE_API_KEY;
-const BASE = "https://api.butterbase.ai/v1/app_hsa4lqgmiq07";
+const BASE = "https://api.butterbase.ai/v1/app_c3jiru08r6vi";
 
 const TRIG = "topic_a13e4360-1efb-4a9a-894a-9404e55b0fc8";   // Right Triangles and Their Parts
 const WATER = "topic_23b0a212-6b8f-4f15-bf2c-e6e2f73a3413";  // Water Changes Its Form

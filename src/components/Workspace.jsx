@@ -7,7 +7,7 @@ import PathGraph from "./PathGraph.jsx";
 import { ConfirmModal, NoticeModal } from "./Modal.jsx";
 import {
   chapterTopics, illustrateTopic, packForTopic, addTopic, extendCourse,
-  reelStart, reelPoll, topicVideo, applicationsFor, setTopicWeek,
+  reelStart, reelPoll, topicVideo, videoReelTopics, applicationsFor, setTopicWeek,
   listSessions, deleteSession
 } from "../lib/backend.js";
 import learnersSeed from "../../packs/learners.json";
@@ -94,9 +94,9 @@ function ReelMain({ topic, index, onTeach, teachBusy, role }) {
         </div>
       )}
       <div className="reel-caption">
-        <span className="reel-num">topic {String(index + 1).padStart(2, "0")}{topic.mastered ? " · taught ✓" : ""}{(topic.applications || []).length ? " · real-world uses below ↓" : ""}</span>
+        <span className="reel-num">{videoSrc && topic.video_caption ? "spot the concept" : `topic ${String(index + 1).padStart(2, "0")}`}{topic.mastered ? " · taught ✓" : ""}</span>
         <h4>{topic.title}</h4>
-        <p>{topic.key_idea}</p>
+        <p>{(videoSrc && topic.video_caption) || topic.key_idea}</p>
         <button className="teach-btn" onClick={() => onTeach(topic)} disabled={!!teachBusy}>
           {teachBusy === topic.id ? "…" : role === "teacher" ? "Preview lesson" : "Now teach it"}
         </button>
@@ -316,6 +316,12 @@ export default function Workspace({ chapter, role, packs, onStartSession, onResu
   const [learnView, setLearnView] = useState("cards");   // cards | reels
   const [openDeck, setOpenDeck] = useState(null);        // topic id whose deck is open
   const [topics, setTopics] = useState(null);
+  const [reelTopics, setReelTopics] = useState(null);   // global: only topics with a real video
+
+  useEffect(() => {
+    if (learnView !== "reels" || reelTopics) return;
+    videoReelTopics().then(setReelTopics).catch(() => setReelTopics([]));
+  }, [learnView]);   // eslint-disable-line
 
   // Demo mode drives the workspace from outside: tab, cards/reels, open deck.
   useEffect(() => {
@@ -513,29 +519,25 @@ export default function Workspace({ chapter, role, packs, onStartSession, onResu
                 />
               ) : null;
             })()}
-            {learnView === "reels" && topics && (() => {
-              const slides = topics.flatMap((t, i) => [
-                { kind: "main", t, i },
-                ...(t.applications || []).map((a, j) => ({ kind: "app", t, a, j }))
-              ]);
-              return (
-                <div className="reel-feed">
-                  {slides.map((s, n) => (
-                    <div className="reel-slide" key={s.kind === "main" ? s.t.id : `${s.t.id}-app${s.j}`}>
-                      <div className="reel-phone">
-                        <span className="reel-counter">{n + 1} / {slides.length}</span>
-                        {s.kind === "main"
-                          ? <ReelMain topic={s.t} index={s.i} onTeach={teach} teachBusy={teachBusy} role={role} />
-                          : <AppSlide topic={s.t} app={s.a} appIndex={s.j} />}
-                        {n === 0 && slides.length > 1 && (
-                          <span className="swipe-hint">swipe ↓</span>
-                        )}
-                      </div>
+            {learnView === "reels" && !reelTopics && <Loader label="loading the reels…" />}
+            {learnView === "reels" && reelTopics && reelTopics.length === 0 && (
+              <p className="home-hint">No video reels yet — a teacher can film one from a topic's reel slot.</p>
+            )}
+            {learnView === "reels" && reelTopics && reelTopics.length > 0 && (
+              <div className="reel-feed">
+                {reelTopics.map((t, n) => (
+                  <div className="reel-slide" key={t.id}>
+                    <div className="reel-phone">
+                      <span className="reel-counter">{n + 1} / {reelTopics.length}</span>
+                      <ReelMain topic={t} index={n} onTeach={teach} teachBusy={teachBusy} role={role} />
+                      {n === 0 && reelTopics.length > 1 && (
+                        <span className="swipe-hint">swipe ↓</span>
+                      )}
                     </div>
-                  ))}
-                </div>
-              );
-            })()}
+                  </div>
+                ))}
+              </div>
+            )}
           </>
         )}
 

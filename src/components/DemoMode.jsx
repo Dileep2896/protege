@@ -183,7 +183,7 @@ export default function DemoMode({ driver, onExit }) {
       {phase === "run" && step && (
         <div className="demo-subtitle">
           <span className="demo-badge">DEMO</span>
-          <p className="demo-caption">{step.caption}</p>
+          <p className="demo-caption">{step.say}</p>
           <span className="demo-ticks">
             {SCRIPT.map((_, n) => <i key={n} className={n <= stepIdx ? "on" : ""} />)}
           </span>

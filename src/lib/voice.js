@@ -1,7 +1,7 @@
 // src/lib/voice.js — speech I/O service (Groq via our proxy; browser fallback for TTS).
 // All audio flows through /fn/voice; the Groq key never reaches the client.
 
-const API_BASE = "https://api.butterbase.ai/v1/app_hsa4lqgmiq07";
+const API_BASE = "https://api.butterbase.ai/v1/app_c3jiru08r6vi";
 
 export async function speechToText(blob) {
   const buf = await blob.arrayBuffer();

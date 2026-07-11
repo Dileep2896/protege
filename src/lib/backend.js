@@ -2,7 +2,7 @@
 // boundary). The browser only ever talks to our serverless functions and the
 // data API; no model keys, no direct gateway calls.
 
-const API_BASE = "https://api.butterbase.ai/v1/app_hsa4lqgmiq07";
+const API_BASE = "https://api.butterbase.ai/v1/app_c3jiru08r6vi";
 
 async function request(path, options = {}) {
   const res = await fetch(`${API_BASE}${path}`, {
@@ -74,6 +74,16 @@ export function reelPoll(topic_id, job_id) {
 export async function topicVideo(topic_id) {
   const rows = await request(`/topics?id=eq.${topic_id}&select=video`, { method: "GET" });
   return rows?.[0]?.video || null;
+}
+// The reel feed: only topics that actually have a generated video (metadata only —
+// the multi-MB video itself is fetched lazily per slide).
+export async function videoReelTopics() {
+  // neq. (empty string) excludes NULLs too — this API has no not.is.null operator
+  const rows = await request(
+    "/topics?video=neq.&select=id,title,key_idea,video_caption,image,mastered,applications&order=created_at.asc",
+    { method: "GET" }
+  );
+  return Array.isArray(rows) ? rows : [];
 }
 export function packForTopic(topic_id) {
   return request("/fn/learn", { method: "POST", body: JSON.stringify({ op: "pack", topic_id }) });
