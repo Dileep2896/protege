@@ -13,6 +13,7 @@ import {
 import learnersSeed from "../../packs/learners.json";
 import personas from "../../packs/personas.json";
 import { IconBook, IconMap, IconCap, IconFolder, IconPlus, IconCalendar, IconPin, IconCards, IconFilm, IconVideo } from "./Icons.jsx";
+import Loader from "./Loader.jsx";
 
 const NAV = [
   { id: "learn", Icon: IconBook, label: "Learn" },
@@ -435,7 +436,7 @@ export default function Workspace({ chapter, role, packs, onStartSession, onResu
           )}
         </div>
         <nav>
-          {NAV.filter(n => n.id !== "add" || role === "teacher").map(n => (
+          {NAV.filter(n => (n.id !== "add" || role === "teacher") && (n.id !== "teach" || role === "student")).map(n => (
             <button key={n.id} className={`side-item ${tab === n.id ? "active" : ""}`} onClick={() => setTab(n.id)}>
               <n.Icon size={15} className="side-icon" /> {n.label}
             </button>
@@ -463,7 +464,7 @@ export default function Workspace({ chapter, role, packs, onStartSession, onResu
                 <button className={learnView === "reels" ? "active" : ""} onClick={() => setLearnView("reels")}><IconFilm size={14} /> Reels</button>
               </div>
             </div>
-            {!topics && <p className="home-hint">Opening…</p>}
+            {!topics && <Loader label="fetching the chapter…" />}
             {learnView === "cards" && (
               <div className="cards-grid">
                 {topics?.map((t, i) => (

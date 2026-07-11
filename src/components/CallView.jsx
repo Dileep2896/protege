@@ -181,23 +181,32 @@ export default function CallView({ session, pack, agents, onClassic }) {
         </div>
 
         <div className="call-bar">
-          <button
-            className={`ptt ${micState}`}
-            onPointerDown={micDown}
-            onPointerUp={micUp}
-            onPointerLeave={micUp}
-            disabled={session.thinking || session.restoring}
-          >
-            {micState === "recording" ? "● listening — release to send"
-              : micState === "transcribing" ? "…got it, sending"
-              : <><IconMic size={14} /> hold to talk</>}
-          </button>
-          <button className="voice-toggle" onClick={() => setChatOpen(!chatOpen)}>
-            <IconChat size={14} /> {chatOpen ? "hide chat" : "chat"}
-          </button>
-          <button className="voice-toggle" onClick={() => { if (voiceOn) stopSpeaking(); setVoiceOn(!voiceOn); }}>
-            {voiceOn ? <IconSpeaker size={15} /> : <IconSpeakerOff size={15} />}
-          </button>
+          <div className="ptt-cluster">
+            <button
+              className={`ptt-round ${micState}`}
+              onPointerDown={micDown}
+              onPointerUp={micUp}
+              onPointerLeave={micUp}
+              disabled={session.thinking || session.restoring}
+              aria-label="hold to talk"
+            >
+              <IconMic size={24} />
+            </button>
+            <span className={`ptt-hint ${micState}`}>
+              {micState === "recording" ? "listening — let go to send"
+                : micState === "transcribing" ? "got it — sending…"
+                : session.thinking ? `${agents[0].name} is thinking…`
+                : "hold to talk"}
+            </span>
+          </div>
+          <div className="call-bar-side">
+            <button className="voice-toggle" onClick={() => setChatOpen(!chatOpen)}>
+              <IconChat size={14} /> {chatOpen ? "hide chat" : "chat"}
+            </button>
+            <button className="voice-toggle" onClick={() => { if (voiceOn) stopSpeaking(); setVoiceOn(!voiceOn); }}>
+              {voiceOn ? <IconSpeaker size={15} /> : <IconSpeakerOff size={15} />}
+            </button>
+          </div>
         </div>
       </div>
 

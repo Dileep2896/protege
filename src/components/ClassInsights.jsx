@@ -10,6 +10,7 @@ import {
   IconSparkle, IconChevron, IconQuote
 } from "./Icons.jsx";
 import learnersSeed from "../../packs/learners.json";
+import Loader from "./Loader.jsx";
 import fractionsPack from "../../packs/fractions_division.json";
 import photosynthesisPack from "../../packs/photosynthesis.json";
 
@@ -113,7 +114,7 @@ export default function ClassInsights({ onViewReport }) {
     };
   }, [sessions]);
 
-  if (!model) return <p className="home-hint">Reading the class's sessions…</p>;
+  if (!model) return <Loader label="reading the class's sessions…" />;
   if (!model.list.length) return <p className="home-hint">No sessions yet — insights appear as your class teaches their protégés.</p>;
 
   const beliefOf = (packId, mid) =>

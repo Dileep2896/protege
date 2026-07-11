@@ -6,6 +6,7 @@ import { buildChapter, listChapters, chapterTopics, learnNext, listSessions, cre
 import learnersSeed from "../../packs/learners.json";
 import ClassInsights from "./ClassInsights.jsx";
 import { IconBook, IconSparkle, IconChart, IconPlay } from "./Icons.jsx";
+import Loader from "./Loader.jsx";
 
 const SUGGESTED_TOPICS = [
   "Black Holes", "How Vaccines Work", "The French Revolution", "Photosynthesis",
@@ -128,7 +129,7 @@ export default function Library({ role, onOpenChapter, onResume, onViewReport, l
       )}
 
       {error && <p className="drawpad-error">{error}</p>}
-      {chapters === null && <p className="home-hint">Opening the shelf…</p>}
+      {chapters === null && <Loader label="opening the shelf…" />}
 
       {role === "student" && <h3 className="shelf-section-title"><IconBook size={17} /> My courses <span className="shelf-sub">from your teacher</span></h3>}
       <section className="shelf">
