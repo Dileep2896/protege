@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSession, lastSessionId } from "./viewmodels/useSession.js";
-import { topicPack } from "./lib/backend.js";
+import { topicPack, listChapters, listSessions } from "./lib/backend.js";
+import DemoMode from "./components/DemoMode.jsx";
 import Landing from "./components/Landing.jsx";
 import Library from "./components/Library.jsx";
 import Workspace from "./components/Workspace.jsx";
@@ -119,8 +120,8 @@ export default function App() {
   const backFromSession = () =>
     setScreen(workspaceChapter ? { name: "workspace" } : { name: "library" });
 
-  async function resumeRow(row) {
-    const base = { learnerId: row.learner_id, level: row.milo_level || "11", sessionId: row.id, key: row.id };
+  async function resumeRow(row, extra = {}) {
+    const base = { learnerId: row.learner_id, level: row.milo_level || "11", sessionId: row.id, key: row.id, ...extra };
     if (row.pack_id.startsWith("topic_")) {
       const pack = await topicPack(row.pack_id.slice(6));
       if (!pack) return setNotice("That topic's pack is gone — its course may have been deleted.");
@@ -129,6 +130,56 @@ export default function App() {
       setScreen({ name: "session", config: { ...base, packId: row.pack_id } });
     }
   }
+
+  // ── Demo mode: a driver the self-running tour uses to steer the app ──────
+  const [demoOn, setDemoOn] = useState(false);
+  const [demoCmd, setDemoCmd] = useState(null);
+  const settle = (ms = 700) => new Promise(r => setTimeout(r, ms));
+  const demoDriver = {
+    async landing() {
+      setScreen({ name: "landing" });
+      await settle(400);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    async landingAgents() {
+      setScreen({ name: "landing" });
+      await settle(300);
+      document.querySelector(".landing-agents")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    },
+    async shelf() {
+      switchRole("student");
+      setScreen({ name: "library" });
+      await settle();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    async cards() {
+      const cs = await listChapters().catch(() => []);
+      const c = cs.find(x => /trig/i.test(x.title)) || cs[0];
+      if (!c) return;
+      setWorkspaceChapter(c);
+      setScreen({ name: "workspace" });
+      setDemoCmd({ tab: "learn", learnView: "cards", deck: 0, n: 1 });
+      await settle(900);
+    },
+    async reels() {
+      setDemoCmd({ tab: "learn", learnView: "reels", deck: null, n: 2 });
+      await settle(800);
+    },
+    async call() {
+      setDemoCmd({ deck: null, n: 3 });
+      const rows = await listSessions(20).catch(() => []);
+      const row = rows.find(r => r.learner_id === "maya_chen") || rows[0];
+      if (row) await resumeRow(row, { startInCall: true });
+      await settle(900);
+    },
+    async insights() {
+      switchRole("teacher");
+      setWorkspaceChapter(null);
+      setScreen({ name: "library" });
+      await settle(800);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
 
   const inApp = screen.name === "library" || screen.name === "workspace";
 
@@ -149,6 +200,9 @@ export default function App() {
         {screen.name === "landing" && (
           <button className="masthead-enter" onClick={goLibrary}>Open the classroom →</button>
         )}
+        {!demoOn && screen.name === "landing" && (
+          <button className="demo-btn" onClick={() => setDemoOn(true)}>▶ 2-min demo</button>
+        )}
       </header>
 
       {screen.name === "landing" && <Landing onEnter={goLibrary} />}
@@ -168,6 +222,7 @@ export default function App() {
           chapter={workspaceChapter}
           role={role}
           packs={PACKS}
+          demoCmd={demoCmd}
           onBack={goLibrary}
           onResume={resumeRow}
           onViewReport={row => setReportOverlay(row.report)}
@@ -183,6 +238,12 @@ export default function App() {
         <ReportView report={reportOverlay} onClose={() => setReportOverlay(null)} />
       )}
       {notice && <NoticeModal title="Hmm." message={notice} onClose={() => setNotice(null)} />}
+      {demoOn && (
+        <DemoMode
+          driver={demoDriver}
+          onExit={() => { setDemoOn(false); setDemoCmd(null); setScreen({ name: "landing" }); }}
+        />
+      )}
     </div>
   );
 }

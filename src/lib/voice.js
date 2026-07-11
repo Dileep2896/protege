@@ -70,6 +70,44 @@ export function stopSpeaking() {
   try { speechSynthesis.cancel(); } catch { /* noop */ }
 }
 
+// Demo-mode helpers: synthesize ahead of time (cached), play on cue. Keeping
+// synthesis separate from playback lets the guided demo run without gaps.
+// The cache stores PROMISES so duplicate calls (StrictMode double-effects,
+// retakes) share one in-flight request — the voice fn wedges on concurrency.
+const synthCache = new Map();
+export function synthesizeSpeech(text, { voice = "ash" } = {}) {
+  const key = voice + "|" + text;
+  if (synthCache.has(key)) return synthCache.get(key);
+  const p = (async () => {
+    try {
+      const res = await fetch(`${API_BASE}/fn/voice`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ op: "tts", text, voice })
+      });
+      const type = res.headers.get("content-type") || "";
+      if (res.ok && type.startsWith("audio/")) {
+        return URL.createObjectURL(await res.blob());
+      }
+    } catch (err) {
+      console.warn("[demo] tts synth failed:", err.message);
+    }
+    return null;
+  })();
+  synthCache.set(key, p);
+  p.then(v => { if (v === null) synthCache.delete(key); });   // failed lines retry next run
+  return p;
+}
+
+export function playAudioUrl(url) {
+  return new Promise((resolve, reject) => {
+    const a = new Audio(url);
+    a.onended = resolve;
+    a.onerror = reject;
+    a.play().catch(reject);
+  });
+}
+
 // Push-to-talk recorder. start() then stop() -> Blob.
 export function createRecorder() {
   let mediaRecorder = null;

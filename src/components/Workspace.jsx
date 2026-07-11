@@ -311,11 +311,22 @@ function CoverCard({ topic, index, onOpen }) {
   );
 }
 
-export default function Workspace({ chapter, role, packs, onStartSession, onResume, onViewReport, onBack }) {
+export default function Workspace({ chapter, role, packs, onStartSession, onResume, onViewReport, onBack, demoCmd }) {
   const [tab, setTab] = useState("learn");
   const [learnView, setLearnView] = useState("cards");   // cards | reels
   const [openDeck, setOpenDeck] = useState(null);        // topic id whose deck is open
   const [topics, setTopics] = useState(null);
+
+  // Demo mode drives the workspace from outside: tab, cards/reels, open deck.
+  useEffect(() => {
+    if (!demoCmd) return;
+    if (demoCmd.tab) setTab(demoCmd.tab);
+    if (demoCmd.learnView) setLearnView(demoCmd.learnView);
+  }, [demoCmd]);   // eslint-disable-line
+  useEffect(() => {
+    if (!demoCmd || demoCmd.deck === undefined || !topics) return;
+    setOpenDeck(demoCmd.deck === null ? null : (topics[demoCmd.deck]?.id ?? null));
+  }, [demoCmd, topics]);   // eslint-disable-line
   const [teachBusy, setTeachBusy] = useState(null);
   const [error, setError] = useState(null);
   const [sessions, setSessions] = useState(null);
