@@ -2725,3 +2725,28 @@ body {
   margin-left: 10px;
 }
 .demo-btn:hover { background: var(--highlighter); }
+
+/* video reels: clip pinned to the top, caption right beneath it — no dead gap */
+.reel-phone:has(> video) { display: flex; flex-direction: column; }
+.reel-phone:has(> video) > video {
+  flex: 0 0 58%;
+  height: 58%;
+  object-fit: cover;
+  object-position: center;
+}
+.reel-phone:has(> video) > .reel-caption {
+  position: static;
+  flex: 1;
+  justify-content: flex-start;
+  padding-top: 14px;
+  background: #16181d;
+}
+.demo-focus {
+  position: fixed;
+  z-index: 195;
+  border: 3px solid var(--ballpoint);
+  border-radius: 14px;
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--highlighter) 40%, transparent), 0 0 34px rgba(36, 86, 166, 0.25);
+  pointer-events: none;
+  transition: top 0.35s ease, left 0.35s ease, width 0.35s ease, height 0.35s ease;
+}

@@ -80,10 +80,10 @@ function Slides({ chapterId }) {
   );
 }
 
-export default function CallView({ session, pack, agents, onClassic, chapterId }) {
+export default function CallView({ session, pack, agents, onClassic, chapterId, startMuted = false }) {
   const [stage, setStage] = useState("board");           // board | slides
   const [micState, setMicState] = useState("idle");      // idle | recording | transcribing
-  const [voiceOn, setVoiceOn] = useState(true);
+  const [voiceOn, setVoiceOn] = useState(!startMuted);
   const [chatOpen, setChatOpen] = useState(false);       // talk-first; chat on demand
   const [speaking, setSpeaking] = useState(null);        // agent name currently speaking
   const [pendingVoice, setPendingVoice] = useState(() => new Set());   // msg indices held until audio starts
@@ -95,7 +95,8 @@ export default function CallView({ session, pack, agents, onClassic, chapterId }
   // Speak each new agent message aloud (queued in order). The text stays
   // hidden until the audio actually starts, so voice and words land together.
   useEffect(() => {
-    if (!voiceOn) { spokenCount.current = session.messages.length; setPendingVoice(new Set()); return; }
+    // a restored transcript is history, not new speech — never re-speak it
+    if (!voiceOn || session.restoring) { spokenCount.current = session.messages.length; setPendingVoice(new Set()); return; }
     const startIdx = spokenCount.current;
     const fresh = session.messages.slice(startIdx)
       .map((m, j) => ({ m, idx: startIdx + j }))

@@ -53,7 +53,7 @@ function SessionScreen({ config, onHome }) {
   if (view === "call") {
     return (
       <>
-        <CallView session={session} pack={pack} agents={agents} onClassic={() => setView("classic")} chapterId={config.chapterId} />
+        <CallView session={session} pack={pack} agents={agents} onClassic={() => setView("classic")} chapterId={config.chapterId} startMuted={!!config.demoMuted} />
         {session.showReport && session.report && (
           <ReportView report={session.report} onClose={() => session.setShowReport(false)} />
         )}
@@ -169,15 +169,20 @@ export default function App() {
       setDemoCmd({ deck: null, n: 3 });
       const rows = await listSessions(20).catch(() => []);
       const row = rows.find(r => r.learner_id === "maya_chen") || rows[0];
-      if (row) await resumeRow(row, { startInCall: true });
+      if (row) await resumeRow(row, { startInCall: true, demoMuted: true });   // narrator speaks; Maya stays quiet
       await settle(900);
     },
     async insights() {
       switchRole("teacher");
       setWorkspaceChapter(null);
       setScreen({ name: "library" });
-      await settle(800);
+      // wait for the gradebook to actually render before the narrator describes it
+      for (let i = 0; i < 20; i++) {
+        if (document.querySelector(".ledger")) break;
+        await settle(300);
+      }
       window.scrollTo({ top: 0, behavior: "smooth" });
+      await settle(400);
     }
   };
 
