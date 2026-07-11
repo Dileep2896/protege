@@ -2262,3 +2262,4 @@ body {
   .ledger { grid-template-columns: repeat(2, 1fr); }
   .gb-detail { padding-left: 18px; }
 }
+.insight-meter-fill { background: var(--ballpoint); border-radius: 4px; }
