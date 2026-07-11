@@ -75,12 +75,12 @@ export async function topicVideo(topic_id) {
   const rows = await request(`/topics?id=eq.${topic_id}&select=video`, { method: "GET" });
   return rows?.[0]?.video || null;
 }
-// The reel feed: only topics that actually have a generated video (metadata only —
-// the multi-MB video itself is fetched lazily per slide).
-export async function videoReelTopics() {
+// The reel feed: only THIS course's topics that actually have a generated video
+// (metadata only — the multi-MB video itself is fetched lazily per slide).
+export async function videoReelTopics(chapter_id) {
   // neq. (empty string) excludes NULLs too — this API has no not.is.null operator
   const rows = await request(
-    "/topics?video=neq.&select=id,title,key_idea,video_caption,image,mastered,applications&order=created_at.asc",
+    `/topics?chapter_id=eq.${chapter_id}&video=neq.&select=id,title,key_idea,video_caption,image,mastered,applications&order=position.asc`,
     { method: "GET" }
   );
   return Array.isArray(rows) ? rows : [];

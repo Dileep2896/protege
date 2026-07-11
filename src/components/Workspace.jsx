@@ -320,7 +320,7 @@ export default function Workspace({ chapter, role, packs, onStartSession, onResu
 
   useEffect(() => {
     if (learnView !== "reels" || reelTopics) return;
-    videoReelTopics().then(setReelTopics).catch(() => setReelTopics([]));
+    videoReelTopics(chapter.id).then(setReelTopics).catch(() => setReelTopics([]));
   }, [learnView]);   // eslint-disable-line
 
   // Demo mode drives the workspace from outside: tab, cards/reels, open deck.
