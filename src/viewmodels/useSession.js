@@ -74,6 +74,10 @@ export function useSession(pack, learnerId, { sessionId = null, level = "11", dy
           console.warn("[milo] opener failed, using static opening:", err.message);
         }
         if (cancelled) return;
+        // The opener is LIVE speech, not restored history — flip restoring off
+        // BEFORE it lands so the call view speaks it aloud. (Restored sessions
+        // set their history while restoring=true, which correctly stays silent.)
+        setRestoring(false);
         setMessages([opening]);
         try {
           const row = await createSession({
