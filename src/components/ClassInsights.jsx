@@ -350,11 +350,8 @@ export default function ClassInsights({ onViewReport }) {
 
                 <div className="attempts">
                   <h5 className="attempts-title">How they tried to teach it</h5>
-                  {c.students.map(s => {
+                  {c.students.filter(s => s.studentTurns.length > 0).map(s => {
                     const attempt = [...s.studentTurns].sort((a, b) => b.length - a.length)[0];
-                    if (!attempt) return (
-                      <p key={s.learner_id} className="home-hint">{firstName(s.learner_id)} hasn't made a teaching attempt yet.</p>
-                    );
                     return (
                       <div key={s.learner_id} className="attempt">
                         <span className="attempt-who">{firstName(s.learner_id)} · {s.studentTurns.length} teaching turn{s.studentTurns.length === 1 ? "" : "s"}</span>
@@ -362,6 +359,15 @@ export default function ClassInsights({ onViewReport }) {
                       </div>
                     );
                   })}
+                  {(() => {
+                    const silent = c.students.filter(s => s.studentTurns.length === 0);
+                    if (!silent.length) return null;
+                    return (
+                      <p className="home-hint">
+                        No attempt yet from {silent.map(s => firstName(s.learner_id)).join(", ")}.
+                      </p>
+                    );
+                  })()}
                 </div>
               </div>
             )}
