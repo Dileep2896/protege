@@ -465,7 +465,7 @@ export default function Workspace({ chapter, role, packs, onStartSession, onResu
     } catch (err) { setNotice(`Delete failed: ${err.message}`); }
   }
 
-  const learnerName = id => learnersSeed.learners.find(l => l.id === id)?.name || id;
+  const learnerName = id => [...learnersSeed.learners, ...(learnersSeed.classmates || [])].find(l => l.id === id)?.name || id;
   const agentFirst = learnerName(learnerId).split(" ")[0];
   const mastered = topics?.filter(t => t.mastered).length || 0;
 
@@ -618,7 +618,7 @@ export default function Workspace({ chapter, role, packs, onStartSession, onResu
                       <tr key={s.id}>
                         <td>{new Date(s.updated_at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
                         <td>{learnerName(s.learner_id)}</td>
-                        <td>{s.pack_title || s.pack_id}</td>
+                        <td>{s.pack_title || packs.find(pk => pk.id === s.pack_id)?.title || s.pack_id}</td>
                         <td><span className={res === tot && tot > 0 ? "prog done" : "prog"}>{res}/{tot}</span></td>
                         <td className="row-actions">
                           <button onClick={() => onResume(s)}>Open</button>

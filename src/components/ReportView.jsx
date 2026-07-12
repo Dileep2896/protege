@@ -38,6 +38,12 @@ function renderMarkdown(md) {
       out.push(<Tag key={k++}>{inline(h[2], k)}</Tag>);
       continue;
     }
+    const bq = line.match(/^>\s?(.*)/);
+    if (bq) {
+      flushList();
+      out.push(<blockquote key={k++} className="report-quote">{inline(bq[1], k)}</blockquote>);
+      continue;
+    }
     const li = line.match(/^[-•]\s+(.*)/);
     const oli = line.match(/^(\d+)\.\s+(.*)/);
     if (li || oli) {
@@ -59,7 +65,7 @@ export default function ReportView({ report, onClose }) {
     <div className="report-overlay" role="dialog" aria-label="Teaching report">
       <div className="report-sheet">
         <div className="report-toolbar no-print">
-          <button onClick={onClose}>Back to session</button>
+          <button onClick={onClose}>Close</button>
           <button onClick={() => window.print()}>Print</button>
         </div>
         <article className="report-body">{renderMarkdown(report)}</article>

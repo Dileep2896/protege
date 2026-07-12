@@ -255,7 +255,7 @@ export default function Library({ role, onOpenChapter, onResume, onViewReport, l
     f.text().then(t => { setPasteText(t.slice(0, 24000)); setShowPaste(true); });
   }
 
-  const learnerName = id => learnersSeed.learners.find(l => l.id === id)?.name || id;
+  const learnerName = id => [...learnersSeed.learners, ...(learnersSeed.classmates || [])].find(l => l.id === id)?.name || id;
 
   const renderBook = c => {
     const m = meta[c.id];

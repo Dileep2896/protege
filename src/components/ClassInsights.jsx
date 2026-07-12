@@ -236,7 +236,7 @@ export default function ClassInsights({ onViewReport }) {
                       const done = mids.filter(m => e.misconceptions[m] === "resolved").length;
                       return (
                         <div key={e.pack_id} className="gb-concept">
-                          <span className="gb-concept-title">{e.pack_title || e.pack_id}</span>
+                          <span className="gb-concept-title">{e.pack_title || BUILTIN[e.pack_id]?.title || e.pack_id}</span>
                           <span className="gb-dots">
                             {mids.map(m => <span key={m} className={`gb-dot ${e.misconceptions[m] === "resolved" ? "ok" : "bad"}`} title={beliefOf(e.pack_id, m)} />)}
                           </span>
