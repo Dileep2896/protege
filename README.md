@@ -38,6 +38,9 @@ when you teach her trigonometry.
 ## Features
 
 **For students**
+- **Snap curiosity** — point your camera at anything (live in-browser capture) and
+  get jaw-dropping facts, a groan-worthy pun, and where that thing matters in the
+  real world — a plain t-shirt comes back with its secret Navy-underwear history
 - **Courses from anywhere** — paste a workbook chapter or name any topic; it becomes an
   illustrated course with real source material and generated concept art per topic
 - **One-idea learn decks** — kickers, highlighter-swept key vocabulary, a corner doodle
