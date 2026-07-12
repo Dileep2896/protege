@@ -1,7 +1,7 @@
 // Library — the classroom home. Students see two shelves: Courses (school
 // material) and Topics (their own curiosity, with one-tap suggestions).
 // Teachers land on Class insights — evidence without effort — with the shelves below.
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { buildChapter, listChapters, chapterTopics, learnNext, listSessions, createCourse, wonderAboutImage } from "../lib/backend.js";
 import learnersSeed from "../../packs/learners.json";
 import ClassInsights from "./ClassInsights.jsx";
@@ -30,29 +30,87 @@ function fileToSmallDataUri(file, maxSide = 900) {
   });
 }
 
+// Snap state lives OUTSIDE React so an in-flight analysis keeps going when you
+// navigate to another screen — coming back (or even reloading) shows the result.
+const snap = {
+  state: (() => {
+    try { return JSON.parse(sessionStorage.getItem("protege_snap")) || {}; } catch { return {}; }
+  })(),
+  busy: false,
+  listeners: new Set(),
+  set(patch) {
+    Object.assign(this.state, patch);
+    try {
+      sessionStorage.setItem("protege_snap", JSON.stringify({ preview: this.state.preview, wonder: this.state.wonder }));
+    } catch { /* quota — result stays in memory */ }
+    this.listeners.forEach(l => l());
+  }
+};
+
+async function snapAnalyze(uri) {
+  snap.busy = true;
+  snap.set({ error: null, wonder: null, preview: uri });
+  try {
+    snap.set({ wonder: await wonderAboutImage(uri) });
+  } catch (err) {
+    snap.set({ error: `Couldn't read the wonder in that one: ${err.message}` });
+  } finally {
+    snap.busy = false;
+    snap.set({});
+  }
+}
+
 // Snap curiosity — photograph anything, get the wonder hiding in it.
 function SnapWonder() {
-  const [preview, setPreview] = useState(null);
-  const [busy, setBusy] = useState(false);
-  const [wonder, setWonder] = useState(null);
-  const [error, setError] = useState(null);
+  const [, tick] = useState(0);
+  const [camOn, setCamOn] = useState(false);
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+
+  useEffect(() => {
+    const l = () => tick(n => n + 1);
+    snap.listeners.add(l);
+    return () => { snap.listeners.delete(l); stopCam(); };
+  }, []);   // eslint-disable-line
+
+  const { preview, wonder, error } = snap.state;
+  const busy = snap.busy;
+
+  function stopCam() {
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    streamRef.current = null;
+    setCamOn(false);
+  }
+
+  async function startCam() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1280 } } });
+      streamRef.current = stream;
+      setCamOn(true);
+      setTimeout(() => { if (videoRef.current) videoRef.current.srcObject = stream; }, 50);
+    } catch (err) {
+      snap.set({ error: `Camera unavailable (${err.message}) — upload a photo instead.` });
+    }
+  }
+
+  function capture() {
+    const v = videoRef.current;
+    if (!v || !v.videoWidth) return;
+    const scale = Math.min(1, 900 / Math.max(v.videoWidth, v.videoHeight));
+    const c = document.createElement("canvas");
+    c.width = Math.round(v.videoWidth * scale);
+    c.height = Math.round(v.videoHeight * scale);
+    c.getContext("2d").drawImage(v, 0, 0, c.width, c.height);
+    stopCam();
+    snapAnalyze(c.toDataURL("image/jpeg", 0.82));
+  }
 
   async function onPhoto(e) {
     const f = e.target.files?.[0];
     e.target.value = "";
     if (!f) return;
-    setBusy(true);
-    setWonder(null);
-    setError(null);
-    try {
-      const uri = await fileToSmallDataUri(f);
-      setPreview(uri);
-      setWonder(await wonderAboutImage(uri));
-    } catch (err) {
-      setError(`Couldn't read the wonder in that one: ${err.message}`);
-    } finally {
-      setBusy(false);
-    }
+    try { snapAnalyze(await fileToSmallDataUri(f)); }
+    catch (err) { snap.set({ error: `Couldn't read that image: ${err.message}` }); }
   }
 
   return (
@@ -60,13 +118,30 @@ function SnapWonder() {
       <h3 className="shelf-section-title"><IconSparkle size={17} /> What's around you right now? <span className="shelf-sub">snap anything — even a t-shirt has secrets</span></h3>
       <div className="snap-card">
         <div className="snap-left">
-          {preview
-            ? <img className="snap-preview" src={preview} alt="your photo" />
-            : <p className="snap-empty">A spoon. Your sneaker. The sky.<br />Everything is hiding something.</p>}
-          <label className="teach-btn snap-btn">
-            {busy ? "looking closely…" : preview ? <><IconCamera size={14} /> snap another</> : <><IconCamera size={14} /> Snap or upload a photo</>}
-            <input type="file" accept="image/*" capture="environment" onChange={onPhoto} hidden disabled={busy} />
-          </label>
+          {camOn ? (
+            <>
+              <video ref={videoRef} className="snap-cam" autoPlay playsInline muted />
+              <div className="snap-actions">
+                <button className="teach-btn snap-btn snap-shutter" onClick={capture}><IconCamera size={15} /> capture</button>
+                <button className="link-btn" onClick={stopCam}>cancel</button>
+              </div>
+            </>
+          ) : (
+            <>
+              {preview
+                ? <img className="snap-preview" src={preview} alt="your photo" />
+                : <p className="snap-empty">A spoon. Your sneaker. The sky.<br />Everything is hiding something.</p>}
+              <div className="snap-actions">
+                <button className="teach-btn snap-btn" onClick={startCam} disabled={busy}>
+                  <IconCamera size={14} /> {preview ? "snap another" : "Open the camera"}
+                </button>
+                <label className="link-btn snap-upload">
+                  …or upload a photo
+                  <input type="file" accept="image/*" onChange={onPhoto} hidden disabled={busy} />
+                </label>
+              </div>
+            </>
+          )}
           {error && <p className="drawpad-error">{error}</p>}
         </div>
         <div className="snap-right">
