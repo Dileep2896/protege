@@ -6,7 +6,7 @@ import MiloFace from "./MiloFace.jsx";
 import DrawPad from "./DrawPad.jsx";
 import { speechToText, speak, stopSpeaking, createRecorder } from "../lib/voice.js";
 import { listChapters, chapterTopics } from "../lib/backend.js";
-import { IconBook, IconMic, IconChat, IconSpeaker, IconSpeakerOff, IconFolder } from "./Icons.jsx";
+import { IconBook, IconMic, IconChat, IconSpeaker, IconSpeakerOff, IconFolder, IconHangup } from "./Icons.jsx";
 import Loader from "./Loader.jsx";
 
 function YouTile({ name }) {
@@ -80,7 +80,7 @@ function Slides({ chapterId }) {
   );
 }
 
-export default function CallView({ session, pack, agents, onClassic, chapterId, startMuted = false }) {
+export default function CallView({ session, pack, agents, onClassic, onLeave, chapterId, startMuted = false }) {
   const [stage, setStage] = useState("board");           // board | slides
   const [micState, setMicState] = useState("idle");      // idle | recording | transcribing
   const [voiceOn, setVoiceOn] = useState(!startMuted);
@@ -226,6 +226,11 @@ export default function CallView({ session, pack, agents, onClassic, chapterId, 
         </div>
 
         <div className="call-bar">
+          {onLeave && (
+            <button className="call-leave" onClick={() => { stopSpeaking(); onLeave(); }} title="leave the call">
+              <IconHangup size={22} />
+            </button>
+          )}
           <div className="ptt-cluster">
             <button
               className={`ptt-round ${micState}`}

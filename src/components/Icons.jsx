@@ -76,3 +76,6 @@ export const IconSpeakerOff = p => (
 export const IconPen = p => (
   <I {...p}><path d="m14.5 5 4.5 4.5L8 20.5l-5 1 1-5L14.5 5Z" /><path d="m12.5 7 4.5 4.5" /></I>
 );
+export const IconHangup = p => (
+  <I {...p}><path d="M4 14.5c4.7-4.4 11.3-4.4 16 0l-2.4 2.9c-.5.6-1.3.7-2 .3l-2-1.2a1.6 1.6 0 0 1-.8-1.4v-1.4a11 11 0 0 0-5.6 0v1.4c0 .57-.3 1.1-.8 1.4l-2 1.2c-.7.4-1.5.3-2-.3L4 14.5Z" /></I>
+);

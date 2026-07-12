@@ -2751,3 +2751,22 @@ body {
   transition: top 0.35s ease, left 0.35s ease, width 0.35s ease, height 0.35s ease;
 }
 .demo-caption { font-size: 0.92rem; font-weight: 500; }
+
+/* leave-call: the red hang-up, meet-style */
+.call-leave {
+  position: absolute;
+  left: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: var(--redpencil);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 3px 3px 0 rgba(34, 37, 42, 0.25);
+  transition: transform 0.12s;
+}
+.call-leave:hover { transform: scale(1.06); }
