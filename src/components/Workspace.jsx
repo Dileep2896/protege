@@ -39,6 +39,19 @@ function ReelMain({ topic, index, onTeach, teachBusy, role }) {
   const [genState, setGenState] = useState("idle");   // idle | generating | failed
   const [checked, setChecked] = useState(false);
   const [sound, setSound] = useState(false);          // autoplay must start muted; one tap turns sound on
+  const videoRef = useRef(null);
+
+  // TikTok rule: a reel only plays while you're actually on it.
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    const io = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) v.play().catch(() => {});
+      else v.pause();
+    }, { threshold: 0.6 });
+    io.observe(v);
+    return () => io.disconnect();
+  }, [videoSrc]);
 
   useEffect(() => {
     // videos are heavy, fetched lazily per slide
@@ -79,7 +92,7 @@ function ReelMain({ topic, index, onTeach, teachBusy, role }) {
     <>
       {videoSrc ? (
         <>
-          <video src={videoSrc} autoPlay loop muted={!sound} playsInline onClick={() => setSound(s => !s)} />
+          <video ref={videoRef} src={videoSrc} loop muted={!sound} playsInline onClick={() => setSound(s => !s)} />
           <button className="reel-sound" onClick={() => setSound(s => !s)} aria-label={sound ? "mute" : "unmute"}>
             {sound ? <IconSpeaker size={14} /> : <><IconSpeakerOff size={14} /> tap for sound</>}
           </button>
