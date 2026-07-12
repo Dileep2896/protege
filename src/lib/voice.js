@@ -23,6 +23,8 @@ export async function speechToText(blob) {
 // otherwise browser speechSynthesis — the call never goes silent.
 // onStart fires the moment audio actually begins (synthesis can take a
 // second or two) so the UI can reveal the text in sync with the voice.
+let currentAudio = null;   // gateway audio must be stoppable too, not just speechSynthesis
+
 export async function speak(text, { voice = "zac", rate = 1.05, onStart } = {}) {
   let started = false;
   const fireStart = () => { if (!started) { started = true; try { onStart?.(); } catch { /* ui only */ } } };
@@ -37,11 +39,14 @@ export async function speak(text, { voice = "zac", rate = 1.05, onStart } = {}) 
       const url = URL.createObjectURL(await res.blob());
       await new Promise((resolve, reject) => {
         const a = new Audio(url);
+        currentAudio = a;
         a.onplaying = fireStart;
         a.onended = resolve;
         a.onerror = reject;
+        a.onpause = resolve;   // stopSpeaking() pauses -> resolve, don't hang
         a.play().catch(reject);
       });
+      if (currentAudio) currentAudio = null;
       URL.revokeObjectURL(url);
       fireStart();   // safety: never leave the text hidden
       return "groq";
@@ -68,6 +73,7 @@ export async function speak(text, { voice = "zac", rate = 1.05, onStart } = {}) 
 
 export function stopSpeaking() {
   try { speechSynthesis.cancel(); } catch { /* noop */ }
+  try { if (currentAudio) { currentAudio.pause(); currentAudio = null; } } catch { /* noop */ }
 }
 
 // Demo-mode helpers: synthesize ahead of time (cached), play on cue. Keeping

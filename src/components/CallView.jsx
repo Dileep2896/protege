@@ -94,9 +94,13 @@ export default function CallView({ session, pack, agents, onClassic, chapterId, 
 
   // Speak each new agent message aloud (queued in order). The text stays
   // hidden until the audio actually starts, so voice and words land together.
+  // leaving the call must silence any in-flight line
+  useEffect(() => () => stopSpeaking(), []);
+
   useEffect(() => {
-    // a restored transcript is history, not new speech — never re-speak it
-    if (!voiceOn || session.restoring) { spokenCount.current = session.messages.length; setPendingVoice(new Set()); return; }
+    // a restored transcript is history, not new speech — never re-speak it,
+    // and never speak at all while the guided demo narrator has the floor
+    if (!voiceOn || session.restoring || window.__protegeDemo) { spokenCount.current = session.messages.length; setPendingVoice(new Set()); return; }
     const startIdx = spokenCount.current;
     const fresh = session.messages.slice(startIdx)
       .map((m, j) => ({ m, idx: startIdx + j }))

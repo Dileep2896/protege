@@ -101,9 +101,11 @@ export default function DemoMode({ driver, onExit }) {
 
   // StrictMode double-mounts: reset the flag on (re)mount or the remounted
   // effect sees the first cleanup's cancel and the whole tour never starts.
+  // The global flag hard-mutes every agent voice while the narrator runs.
   useEffect(() => {
     cancelled.current = false;
-    return () => { cancelled.current = true; stopSpeaking(); };
+    window.__protegeDemo = true;
+    return () => { cancelled.current = true; window.__protegeDemo = false; stopSpeaking(); };
   }, []);
 
   // Phase 1: pipelined synthesis, STRICTLY sequential — the voice fn wedges on
