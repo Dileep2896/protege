@@ -2,16 +2,102 @@
 // material) and Topics (their own curiosity, with one-tap suggestions).
 // Teachers land on Class insights — evidence without effort — with the shelves below.
 import { useEffect, useState } from "react";
-import { buildChapter, listChapters, chapterTopics, learnNext, listSessions, createCourse } from "../lib/backend.js";
+import { buildChapter, listChapters, chapterTopics, learnNext, listSessions, createCourse, wonderAboutImage } from "../lib/backend.js";
 import learnersSeed from "../../packs/learners.json";
 import ClassInsights from "./ClassInsights.jsx";
-import { IconBook, IconSparkle, IconChart, IconPlay } from "./Icons.jsx";
+import { IconBook, IconSparkle, IconChart, IconPlay, IconCamera } from "./Icons.jsx";
 import Loader from "./Loader.jsx";
 
 const SUGGESTED_TOPICS = [
   "Black Holes", "How Vaccines Work", "The French Revolution", "Photosynthesis",
   "Plate Tectonics", "How the Internet Works", "Supply and Demand", "The Human Heart"
 ];
+
+// Downscale a photo client-side so the vision call stays fast and cheap.
+function fileToSmallDataUri(file, maxSide = 900) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * scale);
+      c.height = Math.round(img.height * scale);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      resolve(c.toDataURL("image/jpeg", 0.82));
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+// Snap curiosity — photograph anything, get the wonder hiding in it.
+function SnapWonder({ onLearn, building }) {
+  const [preview, setPreview] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [wonder, setWonder] = useState(null);
+  const [error, setError] = useState(null);
+
+  async function onPhoto(e) {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (!f) return;
+    setBusy(true);
+    setWonder(null);
+    setError(null);
+    try {
+      const uri = await fileToSmallDataUri(f);
+      setPreview(uri);
+      setWonder(await wonderAboutImage(uri));
+    } catch (err) {
+      setError(`Couldn't read the wonder in that one: ${err.message}`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="snap-wonder">
+      <h3 className="shelf-section-title"><IconSparkle size={17} /> What's around you right now? <span className="shelf-sub">snap anything — even a t-shirt has secrets</span></h3>
+      <div className="snap-card">
+        <div className="snap-left">
+          {preview
+            ? <img className="snap-preview" src={preview} alt="your photo" />
+            : <p className="snap-empty">A spoon. Your sneaker. The sky.<br />Everything is hiding something.</p>}
+          <label className="teach-btn snap-btn">
+            {busy ? "looking closely…" : preview ? <><IconCamera size={14} /> snap another</> : <><IconCamera size={14} /> Snap or upload a photo</>}
+            <input type="file" accept="image/*" capture="environment" onChange={onPhoto} hidden disabled={busy} />
+          </label>
+          {error && <p className="drawpad-error">{error}</p>}
+        </div>
+        <div className="snap-right">
+          {busy && <Loader label="finding the hidden wonder…" />}
+          {!busy && !wonder && (
+            <p className="home-hint">Facts, questions, and rabbit holes — pulled from whatever you photograph. Any concept becomes a course in one tap.</p>
+          )}
+          {wonder && (
+            <>
+              <p className="snap-seen">looking at: <strong>{wonder.seen}</strong></p>
+              <p className="snap-hook">{wonder.hook}</p>
+              <ul className="snap-facts">
+                {(wonder.facts || []).map((f, i) => <li key={i}>{f}</li>)}
+              </ul>
+              <div className="snap-questions">
+                {(wonder.questions || []).map((q, i) => <p key={i} className="snap-q">{q}</p>)}
+              </div>
+              <div className="suggest-chips">
+                {(wonder.concepts || []).map(c => (
+                  <button key={c.title} className="chapter-chip" title={c.why} onClick={() => onLearn(c.title)} disabled={!!building}>
+                    {building === c.title ? "building…" : <><IconSparkle size={12} /> Learn: {c.title}</>}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 const isCourse = c => (c.source || "").startsWith("pasted");   // vs internet-built topic
 
@@ -260,6 +346,7 @@ export default function Library({ role, onOpenChapter, onResume, onViewReport, l
               </button>
             </div>
           </section>
+          <SnapWonder onLearn={t => build(t)} building={building} />
         </>
       )}
     </div>

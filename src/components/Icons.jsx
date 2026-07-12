@@ -79,3 +79,6 @@ export const IconPen = p => (
 export const IconHangup = p => (
   <I {...p}><path d="M4 14.5c4.7-4.4 11.3-4.4 16 0l-2.4 2.9c-.5.6-1.3.7-2 .3l-2-1.2a1.6 1.6 0 0 1-.8-1.4v-1.4a11 11 0 0 0-5.6 0v1.4c0 .57-.3 1.1-.8 1.4l-2 1.2c-.7.4-1.5.3-2-.3L4 14.5Z" /></I>
 );
+export const IconCamera = p => (
+  <I {...p}><path d="M4 8.5a2 2 0 0 1 2-2h2l1.4-2h5.2l1.4 2h2a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8.5Z" /><circle cx="12" cy="12.5" r="3.4" /></I>
+);

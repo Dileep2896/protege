@@ -2773,3 +2773,62 @@ body {
 .building-book { cursor: default; opacity: 0.9; }
 .building-book .book-cover { display: flex; align-items: center; justify-content: center; }
 .building-book .loader { padding: 12px 0; }
+
+/* ── snap curiosity: photograph anything, get the wonder in it ──────────── */
+.snap-wonder { margin-top: 8px; }
+.snap-card {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 24px;
+  border: 1.5px dashed var(--ink);
+  border-radius: 10px;
+  background: color-mix(in srgb, #fff 45%, var(--paper));
+  padding: 22px;
+  margin-bottom: 30px;
+}
+@media (max-width: 760px) { .snap-card { grid-template-columns: 1fr; } }
+.snap-left { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+.snap-empty {
+  font-family: "Caveat", cursive;
+  font-size: 1.35rem;
+  color: var(--ballpoint);
+  line-height: 1.4;
+  transform: rotate(-1deg);
+  margin: 8px 0;
+}
+.snap-preview {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  box-shadow: 3px 3px 0 rgba(34, 37, 42, 0.12);
+  transform: rotate(-0.8deg);
+}
+.snap-btn { cursor: pointer; }
+.snap-seen { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 6px; }
+.snap-hook {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-size: 1.18rem;
+  font-weight: 700;
+  line-height: 1.35;
+  margin-bottom: 10px;
+  background: linear-gradient(transparent 45%, color-mix(in srgb, var(--highlighter) 65%, transparent) 45% 92%, transparent 92%);
+  width: fit-content;
+  padding: 0 4px;
+}
+.snap-facts { list-style: none; padding: 0; margin: 0 0 10px; }
+.snap-facts li {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  padding: 5px 0 5px 22px;
+  position: relative;
+  border-bottom: 1px dashed color-mix(in srgb, var(--ink) 14%, transparent);
+}
+.snap-facts li::before { content: "✦"; position: absolute; left: 4px; color: var(--ballpoint); }
+.snap-q {
+  font-family: "Caveat", cursive;
+  font-size: 1.18rem;
+  color: var(--ballpoint);
+  margin: 2px 0;
+}

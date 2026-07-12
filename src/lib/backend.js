@@ -54,6 +54,10 @@ export function askCoach(digest) {
 export function applicationsFor(topic_id) {
   return request("/fn/learn", { method: "POST", body: JSON.stringify({ op: "applications", topic_id }) });
 }
+// Snap curiosity: photo of anything -> the wonder hiding in it (vision call).
+export function wonderAboutImage(imageDataUri) {
+  return request("/fn/learn", { method: "POST", body: JSON.stringify({ op: "wonder", image: imageDataUri }) });
+}
 export function setTopicWeek(topic_id, week) {
   return request(`/topics/${topic_id}`, { method: "PATCH", body: JSON.stringify({ scheduled_week: week }) });
 }

@@ -256,6 +256,28 @@ async function opPack(ctx, body) {
 
 // Real-world applications: 4 "where you'd actually meet this" scenarios per topic.
 // LLM text only — costs fractions of a cent; cached forever on the topic row.
+// Snap curiosity: a student photographs ANYTHING and gets the hidden wonder in
+// it — a hook fact, curiosities, questions, and learnable concepts (each one a
+// tap away from becoming a course). Vision call, no DB writes.
+async function opWonder(ctx, body) {
+  if (!body.image || !body.image.startsWith("data:image/")) return json({ error: "image data URI required" }, 400);
+  const prompt = [
+    "You are the CURIOSITY ENGINE for students aged 10-16. Look at this photo of an everyday thing.",
+    "Find the genuinely astonishing science, math, history, and engineering hiding inside it.",
+    "Be specific to what is ACTUALLY in the photo. Punchy, wonder-first language a kid would repeat to a friend. No lecturing.",
+    'Output EXACTLY this JSON and nothing else:',
+    '{"seen": "what the photo shows, 2-5 words", "hook": "the single most jaw-dropping fact about it, 1-2 sentences", "facts": ["3 short cool facts, each 1-2 sentences"], "questions": ["3 questions worth wondering about it"], "concepts": [{"title": "a learnable topic name, 2-5 words", "why": "one line on why this photo leads there"}]}',
+    "Give exactly 3 facts, 3 questions, 3 concepts."
+  ].join("\n");
+  const data = await llm(ctx, [{ role: "user", content: [
+    { type: "text", text: prompt },
+    { type: "image_url", image_url: { url: body.image } }
+  ]}], { max_tokens: 900, temperature: 0.6 });
+  const out = parseJson(data.choices[0].message.content || "");
+  if (!out.hook || !Array.isArray(out.concepts)) return json({ error: "wonder malformed — try again" }, 502);
+  return json(out, 200);
+}
+
 async function opApplications(ctx, body) {
   const r = await ctx.db.query(
     "SELECT t.id, t.title, t.key_idea, t.explanation, t.applications, c.grade_band FROM topics t JOIN chapters c ON c.id = t.chapter_id WHERE t.id = $1",
@@ -397,6 +419,7 @@ export default async function handler(req, ctx) {
       case "add_topic":  return await opAddTopic(ctx, body);
       case "extend":     return await opExtend(ctx, body);
       case "applications": return await opApplications(ctx, body);
+      case "wonder":     return await opWonder(ctx, body);
       case "coach":      return await opCoach(ctx, body);
       case "reel_start": return await opReelStart(ctx, body);
       case "reel_poll":  return await opReelPoll(ctx, body);
