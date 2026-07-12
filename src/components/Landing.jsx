@@ -3,14 +3,14 @@
 import MiloFace from "./MiloFace.jsx";
 import {
   IconBook, IconCards, IconFilm, IconMic, IconPen, IconMap, IconCalendar,
-  IconChart, IconQuote, IconTarget, IconFlame, IconTrophy, IconSparkle, IconStudent
+  IconChart, IconQuote, IconTarget, IconFlame, IconTrophy, IconSparkle, IconStudent, IconCamera
 } from "./Icons.jsx";
 
 const STEPS = [
   {
     n: "1",
     title: "Learn it in a minute",
-    body: "Any chapter or topic becomes illustrated one-idea cards with quick checks, and reels that show where the concept lives in the real world."
+    body: "Any chapter or topic becomes illustrated one-idea cards with quick checks, and cinematic reels that show where the concept lives in the real world. Or point your camera at anything — even a t-shirt has secrets."
   },
   {
     n: "2",
@@ -32,10 +32,11 @@ const LEARNERS = [
 ];
 
 const STUDENT_FEATURES = [
+  { Icon: IconCamera, text: "Snap curiosity — point your camera at anything and get jaw-dropping facts, a terrible pun, and where it matters in the real world" },
   { Icon: IconBook, text: "Courses from anywhere — paste a workbook chapter or name any topic; it becomes an illustrated course with real material" },
   { Icon: IconCards, text: "One-idea learn decks — highlighter-swept key terms, a real-world card, and a quick check you answer before it reveals" },
-  { Icon: IconFilm, text: "Reels — scroll real-world scenes of the concept: game jumps, roof rafters, ramp launches" },
-  { Icon: IconMic, text: "Live call teaching — push-to-talk voice, each protégé with their own voice, captions as they speak" },
+  { Icon: IconFilm, text: "Cinematic reels — real-world scenes of the concept with sound: skate ramps, shadow tricks, fire-truck ladders" },
+  { Icon: IconMic, text: "Live call teaching — push-to-talk voice, each protégé speaks with their own voice, captions synced to speech" },
   { Icon: IconPen, text: "A whiteboard that truly sees — handwriting AND drawn shapes: sketch a triangle, label an angle, and your protégé reasons about it" },
   { Icon: IconMap, text: "A learning path that knows prerequisites — mastery unlocks the next topic on a live knowledge graph" },
   { Icon: IconCalendar, text: "Weekly homework timeline — this week's topic is pinned; teach it to prove it" }
