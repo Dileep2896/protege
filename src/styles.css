@@ -2861,3 +2861,15 @@ body {
 .snap-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .snap-shutter { background: var(--redpencil); color: #fff; }
 .snap-upload { cursor: pointer; }
+.snap-joke {
+  font-family: "Caveat", cursive;
+  font-size: 1.5rem;
+  color: var(--ink);
+  background: linear-gradient(transparent 40%, color-mix(in srgb, var(--highlighter) 70%, transparent) 40% 92%, transparent 92%);
+  width: fit-content;
+  padding: 0 6px;
+  transform: rotate(-1deg);
+  margin: 10px 0;
+}
+.snap-facts li { font-size: 1rem; line-height: 1.55; }
+.snap-use-how { font-size: 0.92rem; }

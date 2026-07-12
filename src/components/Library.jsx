@@ -156,6 +156,7 @@ function SnapWonder() {
               <ul className="snap-facts">
                 {(wonder.facts || []).map((f, i) => <li key={i}>{f}</li>)}
               </ul>
+              {wonder.joke && <p className="snap-joke">{wonder.joke}</p>}
               {(wonder.usecases || []).length > 0 && (
                 <div className="snap-uses">
                   <p className="snap-uses-title">where this actually matters</p>

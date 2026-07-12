@@ -263,11 +263,11 @@ async function opWonder(ctx, body) {
   if (!body.image || !body.image.startsWith("data:image/")) return json({ error: "image data URI required" }, 400);
   const prompt = [
     "You are the CURIOSITY ENGINE for students aged 10-16. Look at this photo of an everyday thing.",
-    "Find the genuinely astonishing science, history, and engineering hiding inside THIS specific object.",
-    "Punchy, wonder-first language a kid would repeat to a friend at lunch. Specific numbers and surprising connections beat generic trivia. No lecturing.",
+    "Find the astonishing science/history/engineering in THIS specific object — but write like a funny friend TEXTING, not a textbook.",
+    "HARD RULES: every fact UNDER 15 words. Hook under 20 words. Playful, a little silly, specific numbers > vague claims. It should make a kid grin and go 'wait, WHAT?'",
     'Output EXACTLY this JSON and nothing else:',
-    '{"seen": "what the photo shows, 2-5 words", "hook": "the single most jaw-dropping fact about it, 1-2 sentences", "facts": ["4 short WOW facts about this thing, each 1-2 sentences - history, science, weird numbers, hidden engineering"], "usecases": [{"where": "a real place/job/moment this thing or its science matters, 3-6 words", "how": "2 punchy sentences on what it does there"}]}',
-    "Give exactly 4 facts and exactly 3 usecases."
+    '{"seen": "what the photo shows, 2-4 words", "hook": "ONE jaw-dropper, under 20 words, like you cannot believe it yourself", "facts": ["EXACTLY 3 facts, each under 15 words, punchy and fun"], "joke": "one groan-worthy pun or one-liner about this thing", "usecases": [{"where": "place/job, 2-4 words", "how": "ONE punchy sentence, under 15 words"}]}',
+    "Give exactly 3 facts and exactly 2 usecases. Short beats smart."
   ].join("\n");
   const data = await llm(ctx, [{ role: "user", content: [
     { type: "text", text: prompt },
