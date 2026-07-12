@@ -2770,3 +2770,6 @@ body {
   transition: transform 0.12s;
 }
 .call-leave:hover { transform: scale(1.06); }
+.building-book { cursor: default; opacity: 0.9; }
+.building-book .book-cover { display: flex; align-items: center; justify-content: center; }
+.building-book .loader { padding: 12px 0; }

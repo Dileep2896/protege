@@ -25,6 +25,29 @@ export default function Library({ role, onOpenChapter, onResume, onViewReport, l
   const [showPaste, setShowPaste] = useState(false);
   const [building, setBuilding] = useState(false);
   const [error, setError] = useState(null);
+  // A build keeps running server-side even if you navigate away — this marker
+  // survives in localStorage so the shelf can show the course-in-progress.
+  const [pendingBuild, setPendingBuild] = useState(() => {
+    try {
+      const p = JSON.parse(localStorage.getItem("protege_building"));
+      return p && Date.now() - p.ts < 180000 ? p : null;
+    } catch { return null; }
+  });
+
+  useEffect(() => {
+    if (!pendingBuild) return;
+    const iv = setInterval(async () => {
+      const cs = await listChapters().catch(() => null);
+      if (!cs) return;
+      const done = cs.some(c => Date.parse(c.created_at) > pendingBuild.ts);
+      if (done || Date.now() - pendingBuild.ts > 180000) {
+        localStorage.removeItem("protege_building");
+        setPendingBuild(null);
+        setChapters(cs);
+      }
+    }, 8000);
+    return () => clearInterval(iv);
+  }, [pendingBuild]);   // eslint-disable-line
 
   useEffect(() => {
     listChapters().then(async cs => {
@@ -46,10 +69,17 @@ export default function Library({ role, onOpenChapter, onResume, onViewReport, l
     if ((!topic && !text) || building) return;
     setBuilding(topicOverride || true);
     setError(null);
+    const marker = { title: topic || "From your pasted chapter", ts: Date.now() };
+    localStorage.setItem("protege_building", JSON.stringify(marker));
+    setPendingBuild(marker);
     try {
       const res = await buildChapter({ topic: topic || undefined, text: text || undefined });
+      localStorage.removeItem("protege_building");
+      setPendingBuild(null);
       onOpenChapter({ id: res.chapter_id, title: res.title, source: res.source });
     } catch (err) {
+      localStorage.removeItem("protege_building");
+      setPendingBuild(null);
       setError(err.message);
     } finally {
       setBuilding(false);
@@ -201,6 +231,13 @@ export default function Library({ role, onOpenChapter, onResume, onViewReport, l
           <h3 className="shelf-section-title"><IconSparkle size={17} /> Topics I'm curious about <span className="shelf-sub">learn anything, then teach it</span></h3>
           <section className="shelf">
             {topics.map(renderBook)}
+            {pendingBuild && (
+              <div className="book building-book">
+                <span className="book-cover"><Loader label="building…" /></span>
+                <span className="book-title">{pendingBuild.title}</span>
+                <span className="book-meta">pulling real material — about a minute, safe to leave</span>
+              </div>
+            )}
             <div className="book new-book">
               <h3>Wonder about something?</h3>
               <input
