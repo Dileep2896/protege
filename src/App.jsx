@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession, lastSessionId } from "./viewmodels/useSession.js";
 import { topicPack, listChapters, listSessions } from "./lib/backend.js";
 import DemoMode from "./components/DemoMode.jsx";
@@ -104,10 +104,30 @@ function SessionScreen({ config, onHome }) {
 }
 
 export default function App() {
-  // screen: {name:"landing"|"library"|"workspace"|"session"} — plain state, no router.
-  const [screen, setScreen] = useState({ name: "landing" });
+  // screen: {name:"landing"|"library"|"workspace"|"session"} — plain state, no
+  // router, but reloads restore where you were (sessions downgrade to their shelf).
+  const [screen, setScreen] = useState(() => {
+    try {
+      const s = JSON.parse(localStorage.getItem("protege_screen"));
+      if (s?.name === "library") return { name: "library" };
+      if (s?.name === "workspace" && s.chapter?.id) return { name: "workspace" };
+    } catch { /* fresh visit */ }
+    return { name: "landing" };
+  });
   const [role, setRole] = useState(() => localStorage.getItem("milo_role") || "student");
-  const [workspaceChapter, setWorkspaceChapter] = useState(null);
+  const [workspaceChapter, setWorkspaceChapter] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("protege_screen"))?.chapter || null; } catch { return null; }
+  });
+
+  useEffect(() => {
+    const name = screen.name === "session"
+      ? (workspaceChapter ? "workspace" : "library")   // a reload mid-call lands on Resume, not a lost session
+      : screen.name;
+    localStorage.setItem("protege_screen", JSON.stringify({
+      name,
+      chapter: workspaceChapter ? { id: workspaceChapter.id, title: workspaceChapter.title, source: workspaceChapter.source } : null
+    }));
+  }, [screen, workspaceChapter]);
   const [reportOverlay, setReportOverlay] = useState(null);
   const [notice, setNotice] = useState(null);
 
