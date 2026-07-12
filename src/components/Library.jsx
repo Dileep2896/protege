@@ -31,7 +31,7 @@ function fileToSmallDataUri(file, maxSide = 900) {
 }
 
 // Snap curiosity — photograph anything, get the wonder hiding in it.
-function SnapWonder({ onLearn, building }) {
+function SnapWonder() {
   const [preview, setPreview] = useState(null);
   const [busy, setBusy] = useState(false);
   const [wonder, setWonder] = useState(null);
@@ -72,7 +72,7 @@ function SnapWonder({ onLearn, building }) {
         <div className="snap-right">
           {busy && <Loader label="finding the hidden wonder…" />}
           {!busy && !wonder && (
-            <p className="home-hint">Facts, questions, and rabbit holes — pulled from whatever you photograph. Any concept becomes a course in one tap.</p>
+            <p className="home-hint">Jaw-dropping facts and real-world uses — pulled from whatever you photograph.</p>
           )}
           {wonder && (
             <>
@@ -81,16 +81,17 @@ function SnapWonder({ onLearn, building }) {
               <ul className="snap-facts">
                 {(wonder.facts || []).map((f, i) => <li key={i}>{f}</li>)}
               </ul>
-              <div className="snap-questions">
-                {(wonder.questions || []).map((q, i) => <p key={i} className="snap-q">{q}</p>)}
-              </div>
-              <div className="suggest-chips">
-                {(wonder.concepts || []).map(c => (
-                  <button key={c.title} className="chapter-chip" title={c.why} onClick={() => onLearn(c.title)} disabled={!!building}>
-                    {building === c.title ? "building…" : <><IconSparkle size={12} /> Learn: {c.title}</>}
-                  </button>
-                ))}
-              </div>
+              {(wonder.usecases || []).length > 0 && (
+                <div className="snap-uses">
+                  <p className="snap-uses-title">where this actually matters</p>
+                  {(wonder.usecases || []).map((u, i) => (
+                    <div key={i} className="snap-use">
+                      <span className="snap-use-where">{u.where}</span>
+                      <p className="snap-use-how">{u.how}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </>
           )}
         </div>
@@ -346,7 +347,7 @@ export default function Library({ role, onOpenChapter, onResume, onViewReport, l
               </button>
             </div>
           </section>
-          <SnapWonder onLearn={t => build(t)} building={building} />
+          <SnapWonder />
         </>
       )}
     </div>

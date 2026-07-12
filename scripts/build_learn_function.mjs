@@ -281,18 +281,18 @@ async function opWonder(ctx, body) {
   if (!body.image || !body.image.startsWith("data:image/")) return json({ error: "image data URI required" }, 400);
   const prompt = [
     "You are the CURIOSITY ENGINE for students aged 10-16. Look at this photo of an everyday thing.",
-    "Find the genuinely astonishing science, math, history, and engineering hiding inside it.",
-    "Be specific to what is ACTUALLY in the photo. Punchy, wonder-first language a kid would repeat to a friend. No lecturing.",
+    "Find the genuinely astonishing science, history, and engineering hiding inside THIS specific object.",
+    "Punchy, wonder-first language a kid would repeat to a friend at lunch. Specific numbers and surprising connections beat generic trivia. No lecturing.",
     'Output EXACTLY this JSON and nothing else:',
-    '{"seen": "what the photo shows, 2-5 words", "hook": "the single most jaw-dropping fact about it, 1-2 sentences", "facts": ["3 short cool facts, each 1-2 sentences"], "questions": ["3 questions worth wondering about it"], "concepts": [{"title": "a learnable topic name, 2-5 words", "why": "one line on why this photo leads there"}]}',
-    "Give exactly 3 facts, 3 questions, 3 concepts."
+    '{"seen": "what the photo shows, 2-5 words", "hook": "the single most jaw-dropping fact about it, 1-2 sentences", "facts": ["4 short WOW facts about this thing, each 1-2 sentences - history, science, weird numbers, hidden engineering"], "usecases": [{"where": "a real place/job/moment this thing or its science matters, 3-6 words", "how": "2 punchy sentences on what it does there"}]}',
+    "Give exactly 4 facts and exactly 3 usecases."
   ].join("\\n");
   const data = await llm(ctx, [{ role: "user", content: [
     { type: "text", text: prompt },
     { type: "image_url", image_url: { url: body.image } }
   ]}], { max_tokens: 900, temperature: 0.6 });
   const out = parseJson(data.choices[0].message.content || "");
-  if (!out.hook || !Array.isArray(out.concepts)) return json({ error: "wonder malformed — try again" }, 502);
+  if (!out.hook || !Array.isArray(out.usecases)) return json({ error: "wonder malformed — try again" }, 502);
   return json(out, 200);
 }
 
