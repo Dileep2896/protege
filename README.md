@@ -9,7 +9,7 @@ receipts every breakthrough with a verbatim quote of the student's own words. Re
 the intake; **teaching is the proof**; the teacher gets the evidence the same afternoon.
 
 Built for the **Reinvented Education** hackathon (TAL × EverMind) · Track: *Adaptive
-Evaluation Engines* · Live at **https://milo.butterbase.dev**
+Evaluation Engines* · Live at **https://protege.butterbase.dev**
 
 ---
 
